@@ -26,13 +26,16 @@ import bpy
 from bpy.props import *
 from sys import path
 
+from . import property_groups
 from . import operators
 from . import panels
 from . import funcs
 
 
+
 def register():
 
+    property_groups.register()
     operators.register()
     panels.register()
 
@@ -41,6 +44,7 @@ def register():
 
 def unregister():
 
+    property_groups.unregister()
     operators.unregister()
     panels.unregister()
 

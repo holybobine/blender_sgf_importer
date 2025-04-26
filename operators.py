@@ -1,5 +1,6 @@
 import bpy
 import os
+import bmesh
 
 from bpy_extras.io_utils import ImportHelper
 from bpy.props import *
@@ -41,12 +42,39 @@ class SGF_OT_import(bpy.types.Operator, ImportHelper):
             obj = bpy.context.active_object
 
             funcs.del_all_vertices_in_obj(obj)
-            funcs.add_vertices_from_sgf_file(obj, self.filepath, 78)
+            funcs.load_board_from_sgf_file(obj, self.filepath)
+
+            
 
             # bpy.ops.stm.generate_spectrogram_modal('INVOKE_DEFAULT')
 
         return {'FINISHED'}
 
+
+class SGF_OT_increment_current_move(bpy.types.Operator):
+    """"""
+    bl_idname = "sgf.increment_current_move"
+    bl_label = ""
+
+    value: bpy.props.IntProperty()  # type: ignore
+
+    def execute(self, context):
+
+        obj = context.object
+
+        current_move = obj.sgf_settings.current_move
+        move_max = obj.sgf_settings.move_max
+        new_move = current_move + self.value
+
+        if new_move < 0:
+            new_move = 0
+
+        if new_move > move_max:
+            new_move = move_max
+
+        obj.sgf_settings.current_move = new_move
+
+        return {'FINISHED'}
 
 
 class SGF_OT_bouton(bpy.types.Operator):
@@ -55,9 +83,6 @@ class SGF_OT_bouton(bpy.types.Operator):
     bl_label='BOUTON'
 
     def execute(self, context):
-        
-        funcs.get_sgf_modifier(context.object)
-
         print('BOUTON')
 
         return {'FINISHED'}
@@ -67,6 +92,7 @@ class SGF_OT_bouton(bpy.types.Operator):
 classes = [    
     SGF_OT_import,
     SGF_OT_bouton,
+    SGF_OT_increment_current_move,
 ]
 
 
