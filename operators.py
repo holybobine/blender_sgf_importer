@@ -15,14 +15,20 @@ class SGF_OT_import(bpy.types.Operator, ImportHelper):
     bl_label='Import .sgf'
 
     # ImportHelper mixin class uses this
-    filename_ext = ".txt"
+    ext = ".sgf"
+
+    action: bpy.props.EnumProperty( # type: ignore
+        items= (
+                    ("NEW", "New", ""),
+                    ("UPDATE", "Update", "")
+                ),
+    )
 
     filter_glob: StringProperty( # type: ignore
-        default='*.sgf',
+        default='*'+ext,
         options={'HIDDEN'},
         maxlen=255,
-    )  
-
+    )
 
     def execute(self, context):
         print('-INF- import new .sgf file')
@@ -36,10 +42,17 @@ class SGF_OT_import(bpy.types.Operator, ImportHelper):
                     icon='ERROR'
                 )
         else:
-            obj = bpy.context.active_object
 
+            if self.action == 'NEW':
+                obj = funcs.add_new_sgf_object(self, context)
+                funcs.select_object_solo(context, obj)
+            else:
+                obj = bpy.context.active_object
+
+            
             funcs.del_all_vertices_in_obj(obj)
             funcs.load_board_from_sgf_file(obj, self.filepath)
+            
 
         return {'FINISHED'}
 

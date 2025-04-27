@@ -18,13 +18,26 @@ class SGF_PT_main_panel(bpy.types.Panel):
         layout = self.layout
         scn = context.scene
         
-        obj = context.object
-        modifier = funcs.get_sgf_modifier(context.object)
-
         
-        layout.operator(operator='sgf.import', text='Import .sgf file', icon='FILEBROWSER')
+
+        if context.object:
+            row = layout.row(align=True)
+        
+            op = row.operator(operator='sgf.import', text='Choose .sgf file', icon='FILEBROWSER')
+            op.action = 'UPDATE'
+            op = row.operator(operator='sgf.import', text='', icon='ADD')
+            op.action = 'NEW'
+        else:
+            op = layout.operator(operator='sgf.import', text='New board from .sgf file', icon='ADD')
+            op.action = 'NEW'
 
         # layout.operator(operator='sgf.bouton')
+
+        if not context.object:
+            return
+
+        obj = context.object
+        modifier = funcs.get_sgf_modifier(context.object)
 
         col = layout.column(align=True)
         col.prop(obj.sgf_settings, 'current_move', text='Coup')
@@ -86,6 +99,10 @@ class SGF_PT_board_settings(bpy.types.Panel):
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
     bl_category = "SGF Importer"
+
+    @classmethod
+    def poll(self, context):
+        return context.object
 
     def draw(self, context):
         layout = self.layout

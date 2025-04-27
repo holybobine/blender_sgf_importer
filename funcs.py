@@ -10,6 +10,79 @@ from sgfmill import sgf_moves
 from sgfmill import boards
 from sgfmill import ascii_boards
 
+
+def select_object_solo(context, obj):
+
+    for o in context.scene.objects:
+        o.select_set(False)
+
+    obj.select_set(True)
+    context.view_layer.objects.active = obj
+
+def append_from_blend_file(blendfile, section, target, forceImport=False):
+
+    obj_selection = bpy.context.selected_objects
+    obj_active = bpy.context.object
+
+    doAppend = True
+    result = True
+
+    dataSet = ''
+
+    #choose correct data set from section name
+    if section == 'Object':
+        dataSet = bpy.data.objects
+    elif section == 'Material':
+        dataSet = bpy.data.materials
+    elif section == 'NodeTree':
+        dataSet = bpy.data.node_groups
+
+    alreadyExist = dataSet.get(target)
+
+    if alreadyExist and not forceImport:
+        # print('-INF- '+section+' "'+target+'" already in scene, skipping import.')
+        pass
+    else:
+        #append command, with added backslashes to fit python filepath formating
+
+        new_datablock = None
+
+        old_set = set(dataSet[:])
+
+        result = bpy.ops.wm.append(
+                                    filepath=blendfile + "\\"+section+"\\" + target,
+                                    directory=blendfile + "\\"+section+"\\",
+                                    filename=target
+                                )
+
+        new_set = set(dataSet[:]) - old_set
+
+        new_datablock = list(new_set)[0]
+
+        if new_datablock == None:
+            print('-ERR- Failed importing '+section+' "'+target+'" from "'+blendfile+'"')
+            result = False
+        else:
+            # print(f'-INF- successfully imported {new_datablock}')
+            result = new_datablock
+
+        # bpy.ops.object.select_all(action='DESELECT')
+
+        for o in bpy.data.objects:
+            o.select_set(False)
+
+        for o in obj_selection:
+            o.select_set(True)
+
+        bpy.context.view_layer.objects.active = obj_active
+
+        for lib in bpy.data.libraries:
+            if lib.name == os.path.basename(blendfile):
+                # print(f'-INF- removing lib {lib}')
+                bpy.data.batch_remove(ids=(lib,))
+
+        return result
+
 def get_metadata_from_sgf_file(sgf_path, prefix, fail_value='unkown'):
 
     sgf_game = get_sgf_game_from_file(sgf_path)
@@ -229,9 +302,9 @@ def load_board_from_sgf_file(obj, sgf_path, move_number=None):
     board_array = [char for char in ascii_board if char in ['.', 'o', '#']]
 
     set_vertices_from_board_array(obj, board_array)
-
     set_game_metadata(obj, sgf_path)
 
+    obj.sgf_settings.current_move = get_last_move_from_sgf_file(sgf_path)
     
 
     
@@ -308,8 +381,8 @@ def set_game_metadata(obj, sgf_path):
     
 
     # dump sgf_src content
-    sgf_src = read_src_from_sgf_file(sgf_path)
-    print(sgf_src)
+    # sgf_src = read_src_from_sgf_file(sgf_path)
+    # print(sgf_src)
 
     
 
@@ -320,3 +393,24 @@ def update_geonode_value_from_property(self, prop_name):
     value = obj.sgf_settings[prop_name]
 
     set_geonode_value_proper(modifier, prop_name, value)
+
+
+def add_new_sgf_object(self, context):
+    scn = context.scene
+    assetFile = scn.sgf_settings.assetFilePath
+
+    # obj = append_from_blend_file(assetFile, 'Object', 'STM_spectrogram', forceImport=True)
+    append_from_blend_file(assetFile, 'NodeTree', 'procedural_goban', forceImport=False)
+
+    # print(len(context.scene.objects))
+
+    me = bpy.data.meshes.new('sgf_object')
+    obj = bpy.data.objects.new('sgf_object', me)
+    scn.collection.objects.link(obj)
+    
+    mod = obj.modifiers.new("SGF_geonodes", 'NODES')
+    # mod.node_group = bpy.data.node_groups['procedural_goban'].copy()
+    mod.node_group = bpy.data.node_groups['procedural_goban']
+
+
+    return obj

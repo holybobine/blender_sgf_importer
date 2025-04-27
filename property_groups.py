@@ -1,4 +1,5 @@
 import bpy
+import os
 from bpy.props import *
 from bpy.types import PropertyGroup
 
@@ -74,8 +75,19 @@ class SGF_board_props(PropertyGroup):
     game_result : StringProperty() # type: ignore
 
 
+
+
+class SGF_scene_settings(PropertyGroup):
+
+    addon_path = os.path.dirname(__file__)
+
+    assetFilePath : StringProperty(default=os.path.join(addon_path, 'blend_assets', 'blender_sgf_importer_assets_v00.blend')) # type: ignore
+
+
 classes = [
+    SGF_scene_settings,
     SGF_board_props,
+    
 ]
 
 
@@ -83,6 +95,7 @@ def register():
     for c in classes:
         bpy.utils.register_class(c)
 
+    bpy.types.Scene.sgf_settings = PointerProperty(type=SGF_scene_settings) # type: ignore
     bpy.types.Object.sgf_settings = PointerProperty(type=SGF_board_props) # type: ignore
 
 
