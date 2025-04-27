@@ -3,12 +3,29 @@ import bmesh
 from pathlib import Path
 import math
 import os
+import re
 
 from sgfmill import sgf
 from sgfmill import sgf_moves
 from sgfmill import boards
 from sgfmill import ascii_boards
 
+def get_metadata_from_sgf_file(sgf_path, prefix, fail_value='unkown'):
+
+    sgf_game = get_sgf_game_from_file(sgf_path)
+    charset = sgf_game.get_charset()
+
+    sgf_src = str(read_src_from_sgf_file(sgf_path).decode(charset))
+
+    # will search for a string that's between '[]'
+    # and preceeded by the given prefix
+
+    try:
+        result = sgf_src.split(prefix+'[')[1].split(']')[0]
+        return result
+    except Exception as e:
+        print(e)
+        return fail_value
 
 def set_geonode_value_proper(modifier, input_name, value):
     for i in modifier.node_group.interface.items_tree:
@@ -184,17 +201,22 @@ def set_vertices_from_board_array(obj, board_array):
         stone_color.add([i], color_value, 'ADD' )
 
 
-def read_from_sgf_file(sgf_path):
+def read_src_from_sgf_file(sgf_path):
     f = open(sgf_path, "rb")
     sgf_src = f.read()    
     f.close()
 
     return sgf_src
 
+def get_sgf_game_from_file(sgf_path):
+    sgf_src = read_src_from_sgf_file(sgf_path)
+    sgf_game = sgf.Sgf_game.from_bytes(sgf_src)
+
+    return sgf_game
+
 
 def get_last_move_from_sgf_file(sgf_path):
-    sgf_src = read_from_sgf_file(sgf_path)
-    sgf_game = sgf.Sgf_game.from_bytes(sgf_src)
+    sgf_game = get_sgf_game_from_file(sgf_path)
 
     move_max = len([node for node in sgf_game.get_main_sequence()])-1
 
@@ -205,19 +227,16 @@ def load_board_from_sgf_file(obj, sgf_path, move_number=None):
     # generate board mesh
     ascii_board = get_ascii_board_from_sgf_file(sgf_path)
     board_array = [char for char in ascii_board if char in ['.', 'o', '#']]
+
     set_vertices_from_board_array(obj, board_array)
 
-    # set custom properties values
-    obj.sgf_settings.current_move = get_last_move_from_sgf_file(sgf_path)
-    obj.sgf_settings.move_max = get_last_move_from_sgf_file(sgf_path)
-    
-    # set geonodes values
-    modifier = get_sgf_modifier(obj)
-    set_geonode_value_proper(modifier, 'sgf_filepath', sgf_path)
-    set_geonode_value_proper(modifier, 'board_name', os.path.basename(sgf_path))
+    set_game_metadata(obj, sgf_path)
 
     
+
     
+
+
 
 
 def update_board_from_move(self, context):
@@ -239,18 +258,7 @@ def update_board_from_move(self, context):
     set_vertices_from_board_array(obj, board_array)
 
 
-def update_board_size(self, context):
-    obj = context.object
-    modifier = get_sgf_modifier(obj)
 
-    width = obj.sgf_settings.board_width
-    height = obj.sgf_settings.board_height
-
-    modifier["Socket_13"] = width
-    modifier["Socket_14"] = height
-
-    obj.sgf_settings.spacing_x = (width/19)*10
-    obj.sgf_settings.spacing_y = (height/19)*10
 
 
 def get_limited_value(self):
@@ -263,3 +271,52 @@ def set_limited_value(self, new_value):
 
     self['current_move'] = new_value
  
+    
+def set_game_metadata(obj, sgf_path):
+
+    # set geonodes values
+    modifier = get_sgf_modifier(obj)
+    set_geonode_value_proper(modifier, 'sgf_filepath', sgf_path)
+    set_geonode_value_proper(modifier, 'board_name', os.path.basename(sgf_path))
+
+    
+
+    # set custom properties values
+    obj.sgf_settings.sgf_filepath = sgf_path
+    obj.sgf_settings.current_move = get_last_move_from_sgf_file(sgf_path)
+    obj.sgf_settings.move_max = get_last_move_from_sgf_file(sgf_path)
+
+    # get values from sgf_src
+
+    
+
+    obj.sgf_settings.PB = get_metadata_from_sgf_file(sgf_path, 'PB')
+    obj.sgf_settings.PW = get_metadata_from_sgf_file(sgf_path, 'PW')
+    obj.sgf_settings.PB_rank = get_metadata_from_sgf_file(sgf_path, 'BR', fail_value='?')
+    obj.sgf_settings.PW_rank = get_metadata_from_sgf_file(sgf_path, 'WR', fail_value='?')
+    
+    obj.sgf_settings.game_name = get_metadata_from_sgf_file(sgf_path, 'GN', fail_value='no name found for this game')
+    obj.sgf_settings.game_event = get_metadata_from_sgf_file(sgf_path, 'EV')
+    obj.sgf_settings.game_app = get_metadata_from_sgf_file(sgf_path, 'AP')
+    obj.sgf_settings.game_size = get_metadata_from_sgf_file(sgf_path, 'SZ')
+    obj.sgf_settings.game_rules = get_metadata_from_sgf_file(sgf_path, 'RU')
+    obj.sgf_settings.game_date = get_metadata_from_sgf_file(sgf_path, 'DT')
+    obj.sgf_settings.game_komi = get_metadata_from_sgf_file(sgf_path, 'KM')
+    obj.sgf_settings.game_handicap = get_metadata_from_sgf_file(sgf_path, 'HA', fail_value='None')
+    obj.sgf_settings.game_result = get_metadata_from_sgf_file(sgf_path, 'RE')
+
+    
+
+    # dump sgf_src content
+    sgf_src = read_src_from_sgf_file(sgf_path)
+    print(sgf_src)
+
+    
+
+
+def update_geonode_value_from_property(self, prop_name):
+    obj = self.id_data
+    modifier = get_sgf_modifier(obj)
+    value = obj.sgf_settings[prop_name]
+
+    set_geonode_value_proper(modifier, prop_name, value)

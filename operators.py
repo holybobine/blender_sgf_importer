@@ -36,17 +36,10 @@ class SGF_OT_import(bpy.types.Operator, ImportHelper):
                     icon='ERROR'
                 )
         else:
-
-            print(self.filepath)
-
             obj = bpy.context.active_object
 
             funcs.del_all_vertices_in_obj(obj)
             funcs.load_board_from_sgf_file(obj, self.filepath)
-
-            
-
-            # bpy.ops.stm.generate_spectrogram_modal('INVOKE_DEFAULT')
 
         return {'FINISHED'}
 
@@ -84,6 +77,11 @@ class SGF_OT_bouton(bpy.types.Operator):
 
     def execute(self, context):
         print('BOUTON')
+
+        sgf_path = context.object.sgf_settings.sgf_filepath
+        ascii_board = funcs.get_ascii_board_from_sgf_file(sgf_path, 10)
+
+        print(ascii_board)
 
         return {'FINISHED'}
 

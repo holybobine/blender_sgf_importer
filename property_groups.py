@@ -5,6 +5,9 @@ from bpy.types import PropertyGroup
 from . import funcs
 
 class SGF_board_props(PropertyGroup):
+
+    sgf_filepath : StringProperty() # type: ignore
+
     current_move : IntProperty( # type: ignore
         name='Target Move',
         default=0,
@@ -16,11 +19,59 @@ class SGF_board_props(PropertyGroup):
 
     move_max : IntProperty() # type: ignore
 
-    board_width : bpy.props.FloatProperty(default=39.78, update=funcs.update_board_size) # type: ignore
-    board_height : bpy.props.FloatProperty(default=42.66, update=funcs.update_board_size) # type: ignore
+    board_width : bpy.props.FloatProperty( # type: ignore
+        name='board_width',
+        default=39.78, 
+        precision=2,
+        update=lambda self, prop_name: funcs.update_geonode_value_from_property(self, 'board_width')
+    )
+    
+    board_height : bpy.props.FloatProperty( # type: ignore
+        name='board_height',
+        default=42.66, 
+        precision=2,
+        update=lambda self, prop_name: funcs.update_geonode_value_from_property(self, 'board_height')
+    )
+    
+    hoshi_radius : bpy.props.FloatProperty( # type: ignore
+        name='hoshi_radius',
+        default=5.0, 
+        precision=2,
+        update=lambda self, prop_name: funcs.update_geonode_value_from_property(self, 'hoshi_radius')
+    )
+    
+    stone_radius : bpy.props.FloatProperty( # type: ignore
+        name='stone_radius',
+        default=22.0, 
+        precision=2,
+        update=lambda self, prop_name: funcs.update_geonode_value_from_property(self, 'stone_radius')
+    )
+
+    stone_display : bpy.props.BoolProperty( # type: ignore
+        name='stone_display',
+        default=True, 
+        update=lambda self, prop_name: funcs.update_geonode_value_from_property(self, 'stone_display')
+    )
+    
 
     spacing_x : bpy.props.FloatProperty(default=0.0) # type: ignore
     spacing_y : bpy.props.FloatProperty(default=0.0) # type: ignore
+
+
+    PB : StringProperty() # type: ignore
+    PW : StringProperty() # type: ignore
+    PB_rank : StringProperty() # type: ignore
+    PW_rank : StringProperty() # type: ignore
+    
+    game_name : StringProperty() # type: ignore
+    game_event : StringProperty() # type: ignore
+    game_app : StringProperty() # type: ignore
+    game_size : StringProperty() # type: ignore
+    game_rules : StringProperty() # type: ignore
+    game_date : StringProperty() # type: ignore
+    game_komi : StringProperty() # type: ignore
+    game_handicap : StringProperty() # type: ignore
+    game_result : StringProperty() # type: ignore
 
 
 classes = [

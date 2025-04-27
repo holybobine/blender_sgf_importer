@@ -26,23 +26,6 @@ class SGF_PT_main_panel(bpy.types.Panel):
 
         # layout.operator(operator='sgf.bouton')
 
-
-class SGF_PT_settings_panel(bpy.types.Panel):
-    bl_label = "SGF Settings"
-    bl_idname = "SGF_PT_settings_panel"
-    bl_space_type = 'VIEW_3D'
-    bl_region_type = 'UI'
-    bl_category = "SGF Importer"
-
-    def draw(self, context):
-        layout = self.layout
-        scn = context.scene
-        
-        obj = context.object
-        modifier = funcs.get_sgf_modifier(context.object)
-
-        funcs.draw_prop_geonode(layout, modifier, 'board_name', label_name='Nom')
-
         col = layout.column(align=True)
         col.prop(obj.sgf_settings, 'current_move', text='Coup')
 
@@ -61,26 +44,108 @@ class SGF_PT_settings_panel(bpy.types.Panel):
         op = row.operator('sgf.increment_current_move', text='', icon='FF')
         op.value = 9999
 
-        col = layout.column(align=True)
-        col.prop(obj.sgf_settings, 'board_width', text='Largeur (cm)')
-        col.prop(obj.sgf_settings, 'board_height', text='Hauteur (cm)')
+        box = layout.box()
+        split = box.split(factor=0.3)
+        col1 = split.column(align=True)
+        col1.alignment = 'RIGHT'
+        col2 = split.column(align=True)
 
-        col = layout.column(align=True)
-        funcs.draw_prop_geonode(col, modifier, 'hoshi_radius', label_name='Hoshi (mm)')
-        funcs.draw_prop_geonode(col, modifier, 'stone_radius', label_name='Pierres (mm)')
-        funcs.draw_prop_geonode(layout, modifier, 'showStones')
+        split.enabled = False
+
+        col1.label(text='Noir :')
+        col2.label(text='%s (%s)'%(obj.sgf_settings.PB, obj.sgf_settings.PB_rank))
+
+        col1.label(text='Blanc :')
+        col2.label(text='%s (%s)'%(obj.sgf_settings.PW, obj.sgf_settings.PW_rank))
+
+        box = layout.box()
+        split = box.split(factor=0.3)
+        col1 = split.column(align=True)
+        col1.alignment = 'RIGHT'
+        col2 = split.column(align=True)
+
+        split.enabled = False
+
+        col1.label(text='Date :')
+        col2.label(text=obj.sgf_settings.game_date)
+
+        col1.label(text='Komi :')
+        col2.label(text=obj.sgf_settings.game_komi)
+        
+        col1.label(text='Handicap :')
+        col2.label(text=obj.sgf_settings.game_handicap)
+
+        col1.label(text='Résultat :')
+        col2.label(text=obj.sgf_settings.game_result)
+
+
+
+class SGF_PT_board_settings(bpy.types.Panel):
+    bl_label = "Board Settings"
+    bl_idname = "SGF_PT_board_settings"
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'UI'
+    bl_category = "SGF Importer"
+
+    def draw(self, context):
+        layout = self.layout
+        scn = context.scene
+        
+        obj = context.object
+        modifier = funcs.get_sgf_modifier(context.object)
+
+        
+
+        split = layout.split(factor=0.4)
+        col1 = split.column(align=True)
+        col1.alignment = 'RIGHT'
+        col2 = split.column(align=True)
+
+        col1.label(text='Board Name')
+        funcs.draw_prop_geonode(col2, modifier, 'board_name', label=False)
+
+        col1.separator()
+        col2.separator()
+
+        col1.label(text='Width (cm)')
+        col2.prop(obj.sgf_settings, 'board_width', text='')
+
+        col1.label(text='Height (cm)')
+        col2.prop(obj.sgf_settings, 'board_height', text='')
+
+        col1.separator()
+        col2.separator()
+
+        col1.label(text='Hoshi (mm)')
+        col2.prop(obj.sgf_settings, 'hoshi_radius', text='')
+
+        col1.label(text='Stones (mm)')
+        col2.prop(obj.sgf_settings, 'stone_radius', text='')
+
+        col1.separator()
+        col2.separator()
+
+        col1.label(text='Stones display')
+        row = col2.row(align=True)
+        row.prop(obj.sgf_settings, 'stone_display', text='Wire', toggle=True, invert_checkbox=True)
+        row.prop(obj.sgf_settings, 'stone_display', text='Mesh', toggle=True)
+        
+        
+        
 
         box = layout.box()
         col = box.column()
         col.enabled = False
 
-        col.label(text='Espacement (horizontal) : %.2f mm'%obj.sgf_settings.spacing_x)
-        col.label(text='Espacement (vertical) : %.2f mm'%obj.sgf_settings.spacing_y)
+        spacing_x = (obj.sgf_settings.board_width/19)*10
+        spacing_y = (obj.sgf_settings.board_height/19)*10
 
+        col.label(text='Espacement (horizontal) : %.2f mm'%spacing_x)
+        col.label(text='Espacement (vertical) : %.2f mm'%spacing_y)
 
 classes = [    
     SGF_PT_main_panel,
-    SGF_PT_settings_panel,
+    SGF_PT_board_settings,
 ]
 
 
