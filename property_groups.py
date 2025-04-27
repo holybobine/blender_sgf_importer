@@ -9,8 +9,11 @@ class SGF_board_props(PropertyGroup):
         name='Target Move',
         default=0,
         soft_min=0,
+        get=lambda self: funcs.get_limited_value(self),
+        set=lambda self, value: funcs.set_limited_value(self, value),
         update=funcs.update_board_from_move, 
     )
+
     move_max : IntProperty() # type: ignore
 
     board_width : bpy.props.FloatProperty(default=39.78, update=funcs.update_board_size) # type: ignore

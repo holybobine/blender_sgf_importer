@@ -164,7 +164,6 @@ def set_vertices_from_board_array(obj, board_array):
 
 def load_board_from_sgf_file(obj, sgf_path, move_number=None):
     
-
     ascii_board = get_ascii_board_from_sgf_file(sgf_path)
     board_array = [char for char in ascii_board if char in ['.', 'o', '#']]
 
@@ -217,3 +216,15 @@ def update_board_size(self, context):
 
     obj.sgf_settings.spacing_x = (width/19)*10
     obj.sgf_settings.spacing_y = (height/19)*10
+
+
+def get_limited_value(self):
+    return self.get('current_move', 0)
+
+def set_limited_value(self, new_value):
+
+    if new_value > bpy.context.object.sgf_settings.move_max:
+        new_value = bpy.context.object.sgf_settings.move_max
+
+    self['current_move'] = new_value
+ 
