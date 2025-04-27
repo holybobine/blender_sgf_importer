@@ -22,6 +22,8 @@ class SGF_board_props(PropertyGroup):
 
     move_max : IntProperty() # type: ignore
 
+    
+
     board_width : bpy.props.FloatProperty( # type: ignore
         name='board_width',
         default=39.78, 
@@ -56,9 +58,6 @@ class SGF_board_props(PropertyGroup):
         update=lambda self, prop_name: funcs.update_geonode_value_from_property(self, 'stone_display')
     )
     
-
-    spacing_x : bpy.props.FloatProperty(default=0.0) # type: ignore
-    spacing_y : bpy.props.FloatProperty(default=0.0) # type: ignore
 
 
     PB : StringProperty() # type: ignore

@@ -154,7 +154,12 @@ class SGF_PT_board_settings(bpy.types.Panel):
         col2 = split.column(align=True)
 
         col1.label(text='Board Name')
-        funcs.draw_prop_geonode(col2, modifier, 'board_name', label=False)
+        row = col2.row(align=True)
+        funcs.draw_prop_geonode(row, modifier, 'show_board_name', label=False)
+
+        rrow = row.row()
+        rrow.enabled = funcs.get_geonode_value_proper(modifier, 'show_board_name')
+        funcs.draw_prop_geonode(rrow, modifier, 'board_name', label=False)
 
         col1.separator()
         col2.separator()
@@ -195,10 +200,70 @@ class SGF_PT_board_settings(bpy.types.Panel):
         col.label(text='Espacement (horizontal) : %.2f mm'%spacing_x)
         col.label(text='Espacement (vertical) : %.2f mm'%spacing_y)
 
+
+        
+
+        
+
+        
+class SGF_PT_export_settings(bpy.types.Panel):
+    bl_label = "Export settings"
+    bl_idname = "SGF_PT_export_settings"
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'UI'
+    bl_parent_id = 'SGF_PT_sgf_settings'
+    bl_category = "SGF Importer"
+
+    @classmethod
+    def poll(self, context):
+        return bool(poll_draw_sgf_panel(context))
+
+    def draw(self, context):
+        layout = self.layout
+        scn = context.scene
+        
+        obj = context.object
+        modifier = funcs.get_sgf_modifier(context.object)
+
+        split = layout.split(factor=0.4)
+        col1 = split.column()
+        col1.alignment = 'RIGHT'
+        col2 = split.column()
+
+        col1.label(text='Board')
+        col1.label(text='')
+        col1.label(text='')
+        funcs.draw_prop_geonode(col2, modifier, 'show_outer_edge', label_name='Outer Edge')
+        funcs.draw_prop_geonode(col2, modifier, 'show_grid', label_name='Grid')
+        funcs.draw_prop_geonode(col2, modifier, 'show_hoshis', label_name='Hoshis')
+
+        col1.separator()
+        col2.separator()
+
+        col1.label(text='Stones')
+        funcs.draw_prop_geonode(col2, modifier, 'show_black_stones', label_name='Black')
+        funcs.draw_prop_geonode(col2, modifier, 'show_white_stones', label_name='White')
+
+        
+        # split = layout.split(factor=0.5)
+        # col1 = split.column()
+        # col1.alignment = 'RIGHT'
+        # col2 = split.column()
+
+        # funcs.draw_prop_geonode(col2, modifier, 'show_outer_edge', label_name='Edge', icon='MESH_PLANE')
+        # funcs.draw_prop_geonode(col2, modifier, 'show_grid', label_name='Grid', icon='MESH_GRID')
+        # funcs.draw_prop_geonode(col2, modifier, 'show_hoshis', label_name='Hoshis', icon='OUTLINER_DATA_POINTCLOUD')
+        
+
+        # funcs.draw_prop_geonode(col1, modifier, 'show_black_stones', label_name='Black Stones', icon='NODE_MATERIAL')
+        # funcs.draw_prop_geonode(col1, modifier, 'show_white_stones', label_name='White Stones', icon='SHADING_SOLID')
+
+
 classes = [    
     SGF_PT_main_panel,
     SGF_PT_sgf_settings,
     SGF_PT_board_settings,
+    SGF_PT_export_settings,
 ]
 
 
