@@ -9,6 +9,30 @@ from sgfmill import sgf_moves
 from sgfmill import boards
 from sgfmill import ascii_boards
 
+
+def set_geonode_value_proper(modifier, input_name, value):
+    for i in modifier.node_group.interface.items_tree:
+        if i.name == input_name:
+
+            input_type = type(i.default_value).__name__
+            value_type = type(value).__name__
+
+            if input_type == value_type:
+                modifier[i.identifier] = value
+                i.default_value = i.default_value
+
+def get_geonode_value_proper(modifier, input_name):
+    for i in modifier.node_group.interface.items_tree:
+        if i.name == input_name:
+            return modifier[i.identifier]
+
+def reset_geonode_value(modifier, input_name):
+    for i in modifier.node_group.interface.items_tree:
+        if i.name == input_name:
+            modifier[i.identifier] = i.default_value
+            i.default_value = i.default_value
+
+
 def del_all_vertices_from_object(obj):
         if obj.mode == 'OBJECT':
             bm = bmesh.new()
@@ -159,29 +183,40 @@ def set_vertices_from_board_array(obj, board_array):
     for i, color_value in enumerate(color_array):
         stone_color.add([i], color_value, 'ADD' )
 
-       
 
-
-def load_board_from_sgf_file(obj, sgf_path, move_number=None):
-    
-    ascii_board = get_ascii_board_from_sgf_file(sgf_path)
-    board_array = [char for char in ascii_board if char in ['.', 'o', '#']]
-
+def read_from_sgf_file(sgf_path):
     f = open(sgf_path, "rb")
     sgf_src = f.read()    
     f.close()
 
-    game = sgf.Sgf_game.from_bytes(sgf_src)
-    move_max = len([node for node in game.get_main_sequence()])-1
+    return sgf_src
 
-    obj.sgf_settings.current_move = move_max
-    obj.sgf_settings.move_max = move_max
 
-    modifier = get_sgf_modifier(obj)
-    modifier["Socket_11"] = sgf_path
-    modifier["Socket_16"] = os.path.basename(sgf_path)
+def get_last_move_from_sgf_file(sgf_path):
+    sgf_src = read_from_sgf_file(sgf_path)
+    sgf_game = sgf.Sgf_game.from_bytes(sgf_src)
 
+    move_max = len([node for node in sgf_game.get_main_sequence()])-1
+
+    return move_max
+
+def load_board_from_sgf_file(obj, sgf_path, move_number=None):
+    
+    # generate board mesh
+    ascii_board = get_ascii_board_from_sgf_file(sgf_path)
+    board_array = [char for char in ascii_board if char in ['.', 'o', '#']]
     set_vertices_from_board_array(obj, board_array)
+
+    # set custom properties values
+    obj.sgf_settings.current_move = get_last_move_from_sgf_file(sgf_path)
+    obj.sgf_settings.move_max = get_last_move_from_sgf_file(sgf_path)
+    
+    # set geonodes values
+    modifier = get_sgf_modifier(obj)
+    set_geonode_value_proper(modifier, 'sgf_filepath', sgf_path)
+    set_geonode_value_proper(modifier, 'board_name', os.path.basename(sgf_path))
+
+    
     
 
 
