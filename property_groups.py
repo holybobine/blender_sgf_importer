@@ -7,7 +7,7 @@ from . import funcs
 class SGF_board_props(PropertyGroup):
     current_move : IntProperty( # type: ignore
         name='Target Move',
-        default=78,
+        default=0,
         soft_min=0,
         update=funcs.update_board_from_move, 
     )

@@ -12,7 +12,7 @@ from . import funcs
 class SGF_OT_import(bpy.types.Operator, ImportHelper):
     """"""
     bl_idname = 'sgf.import'
-    bl_label=''
+    bl_label='Import .sgf'
 
     # ImportHelper mixin class uses this
     filename_ext = ".txt"

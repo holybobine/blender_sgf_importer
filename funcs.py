@@ -173,7 +173,7 @@ def load_board_from_sgf_file(obj, sgf_path, move_number=None):
     f.close()
 
     game = sgf.Sgf_game.from_bytes(sgf_src)
-    move_max = len([node for node in game.get_main_sequence()])
+    move_max = len([node for node in game.get_main_sequence()])-1
 
     obj.sgf_settings.current_move = move_max
     obj.sgf_settings.move_max = move_max
@@ -201,8 +201,9 @@ def update_board_from_move(self, context):
         del_all_vertices_from_object(obj)
         return
 
-    if current_move != obj.sgf_settings.move_max:
-        set_vertices_from_board_array(obj, board_array)
+
+    set_vertices_from_board_array(obj, board_array)
+
 
 def update_board_size(self, context):
     obj = context.object

@@ -47,14 +47,19 @@ class SGF_PT_settings_panel(bpy.types.Panel):
         col.prop(obj.sgf_settings, 'current_move', text='Coup')
 
         row = col.row(align=True)
-        op = row.operator('sgf.increment_current_move', text='<<')
+        row.scale_x = 20.0
+        op = row.operator('sgf.increment_current_move', text='', icon='REW')
+        op.value = -9999
+        op = row.operator('sgf.increment_current_move', text='', icon='FRAME_PREV')
         op.value = -10
-        op = row.operator('sgf.increment_current_move', text='<')
+        op = row.operator('sgf.increment_current_move', text='', icon='TRIA_LEFT')
         op.value = -1
-        op = row.operator('sgf.increment_current_move', text='>')
+        op = row.operator('sgf.increment_current_move', text='', icon='TRIA_RIGHT')
         op.value = 1
-        op = row.operator('sgf.increment_current_move', text='>>')
+        op = row.operator('sgf.increment_current_move', text='', icon='FRAME_NEXT')
         op.value = 10
+        op = row.operator('sgf.increment_current_move', text='', icon='FF')
+        op.value = 9999
 
         col = layout.column(align=True)
         col.prop(obj.sgf_settings, 'board_width', text='Largeur (cm)')
