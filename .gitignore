@@ -1,5 +1,6 @@
 __pycache__
 _old
 _sgf
+*.pyc
 *.sgf
 *.blend

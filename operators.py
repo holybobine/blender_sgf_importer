@@ -52,6 +52,7 @@ class SGF_OT_import(bpy.types.Operator, ImportHelper):
             
             funcs.del_all_vertices_in_obj(obj)
             funcs.load_board_from_sgf_file(obj, self.filepath)
+            obj.sgf_settings.is_sgf_object = True
             
 
         return {'FINISHED'}

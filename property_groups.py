@@ -7,6 +7,8 @@ from . import funcs
 
 class SGF_board_props(PropertyGroup):
 
+    is_sgf_object : BoolProperty(default=False) # type: ignore
+    
     sgf_filepath : StringProperty() # type: ignore
 
     current_move : IntProperty( # type: ignore

@@ -5,7 +5,14 @@ from . import funcs
 
 
 
+def poll_draw_sgf_panel(context):
+    if not context.object:
+        return
+    
+    if not context.object.sgf_settings.is_sgf_object:
+        return
 
+    return True
 
 class SGF_PT_main_panel(bpy.types.Panel):
     bl_label = "SGF Importer"
@@ -20,27 +27,80 @@ class SGF_PT_main_panel(bpy.types.Panel):
         
         
 
-        if context.object:
-            row = layout.row(align=True)
+        # if context.object:
+        #     row = layout.row(align=True)
         
-            op = row.operator(operator='sgf.import', text='Choose .sgf file', icon='FILEBROWSER')
-            op.action = 'UPDATE'
-            op = row.operator(operator='sgf.import', text='', icon='ADD')
-            op.action = 'NEW'
-        else:
-            op = layout.operator(operator='sgf.import', text='New board from .sgf file', icon='ADD')
-            op.action = 'NEW'
+        #     op = row.operator(operator='sgf.import', text='Choose .sgf file', icon='FILEBROWSER')
+        #     op.action = 'UPDATE'
+        #     op = row.operator(operator='sgf.import', text='', icon='ADD')
+        #     op.action = 'NEW'
+        # else:
+            # op = layout.operator(operator='sgf.import', text='New board from .sgf file', icon='ADD')
+            # op.action = 'NEW'
 
-        # layout.operator(operator='sgf.bouton')
+        op = layout.operator(operator='sgf.import', text='New board from .sgf file', icon='ADD')
+        op.action = 'NEW'
 
-        if not context.object:
-            return
+        
+
+
+
+class SGF_PT_sgf_settings(bpy.types.Panel):
+    bl_label = "SGF Settings"
+    bl_idname = "SGF_PT_sgf_settings"
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'UI'
+    bl_category = "SGF Importer"
+
+    @classmethod
+    def poll(self, context):
+        return bool(poll_draw_sgf_panel(context))
+
+    def draw(self, context):
+
+        layout = self.layout
+        scn = context.scene
+        
 
         obj = context.object
         modifier = funcs.get_sgf_modifier(context.object)
 
+        # row = layout.row(align=True)
+        # row.prop(obj.sgf_settings, 'sgf_filepath', text='')
+        # op = row.operator(operator='sgf.import', text='', icon='FILEBROWSER')
+        # op.action = 'UPDATE'
+
+
+
+        row = layout.row()
+
+        box = row.box()
+        box.label(text='%s (%s)'%(obj.sgf_settings.PB, obj.sgf_settings.PB_rank), icon='NODE_MATERIAL')
+
+        box = row.box()
+        box.label(text='%s (%s)'%(obj.sgf_settings.PW, obj.sgf_settings.PW_rank), icon='SHADING_SOLID')
+
+        box = layout.box()
+        split = box.split(factor=0.5)
+        col1 = split.column(align=True)
+        col1.alignment = 'RIGHT'
+        col2 = split.column(align=True)
+
+        split.enabled = False
+
+        # col1.label(text='Date :')
+        # col2.label(text=obj.sgf_settings.game_date)
+
+        col1.label(text='Komi :')
+        col2.label(text=obj.sgf_settings.game_komi)
+        
+        col1.label(text='Handicap :')
+        col2.label(text=obj.sgf_settings.game_handicap)
+
+        col1.label(text='Result :')
+        col2.label(text=obj.sgf_settings.game_result)
+
         col = layout.column(align=True)
-        col.prop(obj.sgf_settings, 'current_move', text='Coup')
 
         row = col.row(align=True)
         row.scale_x = 20.0
@@ -57,39 +117,14 @@ class SGF_PT_main_panel(bpy.types.Panel):
         op = row.operator('sgf.increment_current_move', text='', icon='FF')
         op.value = 9999
 
-        box = layout.box()
-        split = box.split(factor=0.3)
-        col1 = split.column(align=True)
-        col1.alignment = 'RIGHT'
-        col2 = split.column(align=True)
+        col.prop(obj.sgf_settings, 'current_move', text='Move')
 
-        split.enabled = False
+        row = layout.row()
 
-        col1.label(text='Noir :')
-        col2.label(text='%s (%s)'%(obj.sgf_settings.PB, obj.sgf_settings.PB_rank))
+        op = row.operator(operator='sgf.import', text='Change .sgf file', icon='FILEBROWSER')
+        op.action = 'UPDATE'
 
-        col1.label(text='Blanc :')
-        col2.label(text='%s (%s)'%(obj.sgf_settings.PW, obj.sgf_settings.PW_rank))
-
-        box = layout.box()
-        split = box.split(factor=0.3)
-        col1 = split.column(align=True)
-        col1.alignment = 'RIGHT'
-        col2 = split.column(align=True)
-
-        split.enabled = False
-
-        col1.label(text='Date :')
-        col2.label(text=obj.sgf_settings.game_date)
-
-        col1.label(text='Komi :')
-        col2.label(text=obj.sgf_settings.game_komi)
-        
-        col1.label(text='Handicap :')
-        col2.label(text=obj.sgf_settings.game_handicap)
-
-        col1.label(text='Résultat :')
-        col2.label(text=obj.sgf_settings.game_result)
+        row.operator(operator='sgf.bouton', text='Export to .csv', icon='EXPORT')
 
 
 
@@ -102,7 +137,7 @@ class SGF_PT_board_settings(bpy.types.Panel):
 
     @classmethod
     def poll(self, context):
-        return context.object
+        return bool(poll_draw_sgf_panel(context))
 
     def draw(self, context):
         layout = self.layout
@@ -162,6 +197,7 @@ class SGF_PT_board_settings(bpy.types.Panel):
 
 classes = [    
     SGF_PT_main_panel,
+    SGF_PT_sgf_settings,
     SGF_PT_board_settings,
 ]
 
