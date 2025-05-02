@@ -84,6 +84,27 @@ class SGF_scene_settings(PropertyGroup):
 
     assetFilePath : StringProperty(default=os.path.join(addon_path, 'blend_assets', 'blender_sgf_importer_assets_v01.blend')) # type: ignore
 
+    export_outer_edge : BoolProperty( # type: ignore
+        name='Edge',
+        default=True,
+    )
+    export_grid : BoolProperty( # type: ignore
+        name='Grid',
+        default=True,
+    )
+    export_hoshis : BoolProperty( # type: ignore
+        name='Hoshis',
+        default=True,
+    )
+    export_black_stones : BoolProperty( # type: ignore
+        name='Black',
+        default=True,
+    )
+    export_white_stones : BoolProperty( # type: ignore
+        name='White',
+        default=True,
+    )
+
 
 classes = [
     SGF_scene_settings,

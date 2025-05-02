@@ -95,7 +95,7 @@ class SGF_OT_bouton(bpy.types.Operator):
     def execute(self, context):
         print('BOUTON')
 
-        funcs.set_view_top()
+        # funcs.set_view_top()
 
         return {'FINISHED'} 
 
@@ -115,6 +115,37 @@ class SGF_OT_export_to_svg(bpy.types.Operator, ExportHelper):
         options={'HIDDEN'},
         maxlen=255,  # Max internal buffer length, longer would be clamped.
     )
+
+    def draw(self, context):
+        layout = self.layout
+        scn = context.scene
+
+        obj = context.object
+        modifier = funcs.get_sgf_modifier(context.object)
+
+        split = layout.split(factor=0.4)
+        col1 = split.column()
+        col1.alignment = 'RIGHT'
+        col2 = split.column()
+
+        col1.label(text='Board')
+        col1.label(text='')
+        col1.label(text='')
+        col2.prop(scn.sgf_settings, 'export_outer_edge')
+        col2.prop(scn.sgf_settings, 'export_grid')
+        col2.prop(scn.sgf_settings, 'export_hoshis')
+        # funcs.draw_prop_geonode(col2, modifier, 'show_outer_edge', label_name='Outer Edge')
+        # funcs.draw_prop_geonode(col2, modifier, 'show_grid', label_name='Grid')
+        # funcs.draw_prop_geonode(col2, modifier, 'show_hoshis', label_name='Hoshis')
+
+        col1.separator()
+        col2.separator()
+
+        col1.label(text='Stones')
+        col2.prop(scn.sgf_settings, 'export_black_stones')
+        col2.prop(scn.sgf_settings, 'export_white_stones')
+        # funcs.draw_prop_geonode(col2, modifier, 'show_black_stones', label_name='Black')
+        # funcs.draw_prop_geonode(col2, modifier, 'show_white_stones', label_name='White')
     
     def execute(self, context):
 

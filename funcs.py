@@ -513,15 +513,26 @@ def create_export_cam_above_object(obj):
 
 
 def export_to_svg_ops(obj, svg_filepath):
-    modifier = get_sgf_modifier(obj)
-    stone_display_value = get_geonode_value_proper(modifier, 'stone_display')
     
+    # select object solo and duplicate
     select_object_solo(obj)
-    set_geonode_value_proper(modifier, 'stone_display', 0)
-
     bpy.ops.object.duplicate()
-    bpy.ops.object.modifier_apply(modifier=get_sgf_modifier(bpy.context.object).name)
 
+    # set geonode values based on scene export values
+    scn = bpy.context.scene
+    duplicate_modifier = get_sgf_modifier(bpy.context.object)
+
+    set_geonode_value_proper(duplicate_modifier, 'show_outer_edge', scn.sgf_settings.export_outer_edge)
+    set_geonode_value_proper(duplicate_modifier, 'show_grid', scn.sgf_settings.export_grid)
+    set_geonode_value_proper(duplicate_modifier, 'show_hoshis', scn.sgf_settings.export_hoshis)
+    set_geonode_value_proper(duplicate_modifier, 'show_black_stones', scn.sgf_settings.export_black_stones)
+    set_geonode_value_proper(duplicate_modifier, 'show_white_stones', scn.sgf_settings.export_white_stones)
+    set_geonode_value_proper(duplicate_modifier, 'stone_display', 0)
+
+    # apply modifier
+    bpy.ops.object.modifier_apply(modifier=duplicate_modifier.name)
+
+    # convert to gpencil
     bpy.ops.object.convert(target='CURVE')
     bpy.context.object.data.dimensions = '2D'
     bpy.ops.object.convert(target='GPENCIL')
@@ -531,14 +542,13 @@ def export_to_svg_ops(obj, svg_filepath):
     # bpy.ops.object.mode_set(mode = 'EDIT_GPENCIL')
     # bpy.ops.object.mode_set(mode = 'OBJECT')
 
-    
-
+    # export to svg
     bpy.ops.wm.gpencil_export_svg(filepath=svg_filepath)
 
+    # delete duplicate and select back original object
     bpy.ops.object.delete()
-    
-    set_geonode_value_proper(modifier, 'stone_display', stone_display_value)
-    
+    select_object_solo(obj)
+
 
 
 def set_view_top():
