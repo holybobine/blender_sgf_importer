@@ -82,7 +82,7 @@ class SGF_scene_settings(PropertyGroup):
 
     addon_path = os.path.dirname(__file__)
 
-    assetFilePath : StringProperty(default=os.path.join(addon_path, 'blend_assets', 'blender_sgf_importer_assets_v00.blend')) # type: ignore
+    assetFilePath : StringProperty(default=os.path.join(addon_path, 'blend_assets', 'blender_sgf_importer_assets_v01.blend')) # type: ignore
 
 
 classes = [

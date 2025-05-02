@@ -11,13 +11,13 @@ from sgfmill import boards
 from sgfmill import ascii_boards
 
 
-def select_object_solo(context, obj):
+def select_object_solo(obj):
 
-    for o in context.scene.objects:
+    for o in bpy.context.scene.objects:
         o.select_set(False)
 
     obj.select_set(True)
-    context.view_layer.objects.active = obj
+    bpy.context.view_layer.objects.active = obj
 
 def append_from_blend_file(blendfile, section, target, forceImport=False):
 
@@ -395,18 +395,27 @@ def update_geonode_value_from_property(self, prop_name):
     set_geonode_value_proper(modifier, prop_name, value)
 
 
+def create_new_object(name='dummy', me=None):
+    if not me:
+        me = bpy.data.meshes.new(name)
+    obj = bpy.data.objects.new(name, me)
+    bpy.context.scene.collection.objects.link(obj)
+
+    return obj
+
+def duplicate_object(obj):
+    dupe = bpy.data.objects.new(obj.name, obj.data)
+    bpy.context.scene.collection.objects.link(dupe)
+
+    return dupe
+
 def add_new_sgf_object(self, context):
     scn = context.scene
     assetFile = scn.sgf_settings.assetFilePath
 
-    # obj = append_from_blend_file(assetFile, 'Object', 'STM_spectrogram', forceImport=True)
     append_from_blend_file(assetFile, 'NodeTree', 'procedural_goban', forceImport=False)
 
-    # print(len(context.scene.objects))
-
-    me = bpy.data.meshes.new('sgf_object')
-    obj = bpy.data.objects.new('sgf_object', me)
-    scn.collection.objects.link(obj)
+    obj = create_new_object('sgf_object')
     
     mod = obj.modifiers.new("SGF_geonodes", 'NODES')
     # mod.node_group = bpy.data.node_groups['procedural_goban'].copy()
@@ -414,3 +423,148 @@ def add_new_sgf_object(self, context):
 
 
     return obj
+
+def duplicate_gn_modifier_on_target_object(gn_mod, target_obj):
+
+    name = gn_mod.name
+    node_tree_name = gn_mod.node_group.name
+
+    target_mod = target_obj.modifiers.new(name, 'NODES')
+    target_mod.node_group = bpy.data.node_groups[node_tree_name]
+
+    for i in gn_mod.node_group.interface.items_tree:
+            if type(i).__name__ != 'NodeTreeInterfaceSocketGeometry':
+                target_mod[i.identifier] = gn_mod[i.identifier]
+
+    return target_mod
+
+def build_temp_name_from_selection(obj):
+    modifier = get_sgf_modifier(obj)
+
+    edge = 'edge' if get_geonode_value_proper(modifier, 'show_outer_edge') else ''
+    grid = 'grid' if get_geonode_value_proper(modifier, 'show_grid') else ''
+    hoshis = 'hoshis' if get_geonode_value_proper(modifier, 'show_hoshis') else ''
+    black = 'black' if get_geonode_value_proper(modifier, 'show_black_stones') else ''
+    white = 'white' if get_geonode_value_proper(modifier, 'show_white_stones') else ''
+
+    temp_filename = ''
+
+    for element in [edge, grid, hoshis, black, white]:
+        if element != '':
+
+            if temp_filename != '':
+                temp_filename += '_'
+
+            temp_filename += element
+
+    svg_temp_path = bpy.path.abspath("//") + temp_filename + '.svg'
+
+    return svg_temp_path
+
+def update_all_viewports():
+    for area in bpy.context.window.screen.areas:
+        if area.type == 'VIEW_3D':
+            area.tag_redraw()
+
+
+
+
+def get_bound_box_min_from_obj(obj):
+
+    min_x = min([corner[0] for corner in obj.bound_box])
+    min_y = min([corner[1] for corner in obj.bound_box])
+    min_z = min([corner[2] for corner in obj.bound_box])
+
+    return [min_x, min_y, min_z]
+
+def get_bound_box_max_from_obj(obj):
+    max_x = max([corner[0] for corner in obj.bound_box])
+    max_y = max([corner[1] for corner in obj.bound_box])
+    max_z = max([corner[2] for corner in obj.bound_box])
+
+    return [max_x, max_y, max_z]
+
+
+def create_export_cam_above_object(obj):
+    dim_x = obj.dimensions[0]
+    dim_y = obj.dimensions[1]
+
+    min_x = get_bound_box_min_from_obj(obj)[0]
+    min_y = get_bound_box_min_from_obj(obj)[1]
+
+    cam_x = min_x + (dim_x/2)
+    cam_y = min_y + (dim_y/2)
+    cam_z = max(dim_x, dim_y)
+
+    camera_data = bpy.data.cameras.new(name='Camera')
+    camera_object = bpy.data.objects.new('Camera', camera_data)
+    bpy.context.scene.collection.objects.link(camera_object)
+
+
+
+    
+
+    camera_object.location = (cam_x, cam_y, cam_z)
+
+    # camera_data.type = 'ORTHO'
+    # camera_data.ortho_scale = cam_z
+
+    return camera_object
+
+
+def export_to_svg_ops(obj, svg_filepath):
+    modifier = get_sgf_modifier(obj)
+    stone_display_value = get_geonode_value_proper(modifier, 'stone_display')
+    
+    select_object_solo(obj)
+    set_geonode_value_proper(modifier, 'stone_display', 0)
+
+    bpy.ops.object.duplicate()
+    bpy.ops.object.modifier_apply(modifier=get_sgf_modifier(bpy.context.object).name)
+
+    bpy.ops.object.convert(target='CURVE')
+    bpy.context.object.data.dimensions = '2D'
+    bpy.ops.object.convert(target='GPENCIL')
+
+    set_line_thickness_on_gp_object(bpy.context.object, 0.05)
+
+    # bpy.ops.object.mode_set(mode = 'EDIT_GPENCIL')
+    # bpy.ops.object.mode_set(mode = 'OBJECT')
+
+    
+
+    bpy.ops.wm.gpencil_export_svg(filepath=svg_filepath)
+
+    bpy.ops.object.delete()
+    
+    set_geonode_value_proper(modifier, 'stone_display', stone_display_value)
+    
+
+
+def set_view_top():
+
+    area_type = 'VIEW_3D'
+    areas  = [area for area in bpy.context.window.screen.areas if area.type == area_type]
+
+    with bpy.context.temp_override(
+        window=bpy.context.window,
+        area=areas[0],
+        region=[region for region in areas[0].regions if region.type == 'WINDOW'][0],
+        screen=bpy.context.window.screen
+    ):
+        bpy.ops.view3d.view_axis(type='TOP')
+        bpy.ops.view3d.view_selected(use_all_regions=False)
+
+
+def set_line_thickness_on_gp_object(gp_obj, thickness):
+    for gpl in gp_obj.data.layers:
+        gpf = gpl.active_frame
+        # Loop all strokes in active frame
+        for gps in gpf.strokes:
+            # You can set the stroke width here to your liking
+            gps.line_width = 1
+            # Loop all points in stroke
+            for p in gps.points:
+                # Adjust thickness of this point,
+                # by setting the pressure to the default 1.0.
+                p.pressure = thickness

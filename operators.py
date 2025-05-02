@@ -1,10 +1,12 @@
 import bpy
 import os
 import bmesh
+import mathutils
 
-from bpy_extras.io_utils import ImportHelper
+from bpy_extras.io_utils import ImportHelper, ExportHelper
 from bpy.props import *
 from . import funcs
+
 
 
 
@@ -13,6 +15,7 @@ class SGF_OT_import(bpy.types.Operator, ImportHelper):
     """"""
     bl_idname = 'sgf.import'
     bl_label='Import .sgf'
+    bl_options = {'UNDO'}
 
     # ImportHelper mixin class uses this
     ext = ".sgf"
@@ -45,7 +48,7 @@ class SGF_OT_import(bpy.types.Operator, ImportHelper):
 
             if self.action == 'NEW':
                 obj = funcs.add_new_sgf_object(self, context)
-                funcs.select_object_solo(context, obj)
+                funcs.select_object_solo(obj)
             else:
                 obj = bpy.context.active_object
 
@@ -57,11 +60,11 @@ class SGF_OT_import(bpy.types.Operator, ImportHelper):
 
         return {'FINISHED'}
 
-
 class SGF_OT_increment_current_move(bpy.types.Operator):
     """"""
     bl_idname = "sgf.increment_current_move"
     bl_label = ""
+    bl_options = {'UNDO'}
 
     value: bpy.props.IntProperty()  # type: ignore
 
@@ -83,28 +86,120 @@ class SGF_OT_increment_current_move(bpy.types.Operator):
 
         return {'FINISHED'}
 
-
 class SGF_OT_bouton(bpy.types.Operator):
     """"""
     bl_idname = 'sgf.bouton'
     bl_label='BOUTON'
+    bl_options = {'UNDO'}
 
     def execute(self, context):
         print('BOUTON')
 
-        sgf_path = context.object.sgf_settings.sgf_filepath
-        ascii_board = funcs.get_ascii_board_from_sgf_file(sgf_path, 10)
+        funcs.set_view_top()
 
-        print(ascii_board)
+        return {'FINISHED'} 
 
-        return {'FINISHED'}
 
+class SGF_OT_export_to_svg(bpy.types.Operator, ExportHelper):
+    """"""
+    bl_idname = 'sgf.export_to_svg'
+    bl_label='Export SVG'
+    bl_options = {'UNDO'}
+
+    filepath = ''
+
+    filename_ext = ".svg"
+
+    filter_glob: StringProperty( # type: ignore
+        default="*.svg",
+        options={'HIDDEN'},
+        maxlen=255,  # Max internal buffer length, longer would be clamped.
+    )
+    
+    def execute(self, context):
+
+        obj = context.object
+
+        # store values to be restored
+
+        obj_loc = obj.location.copy()
+        obj_rot = obj.rotation_euler.copy()
+        obj_sca = obj.scale.copy()
+
+        resolution_x = bpy.data.scenes["Scene"].render.resolution_x
+        resolution_y = bpy.data.scenes["Scene"].render.resolution_y
+
+        areas_view_modes = []
+        for area in bpy.context.screen.areas:
+            if area.type == 'VIEW_3D':
+                areas_view_modes.append([
+                    area,
+                    area.spaces[0].region_3d.view_perspective,
+                    area.spaces[0].use_local_camera,
+                    area.spaces[0].camera,
+                ])
+
+
+        # reset obj transforms
+
+        obj_x = -1 - funcs.get_bound_box_min_from_obj(obj)[1]
+        obj_y = 1 - funcs.get_bound_box_max_from_obj(obj)[1]
+
+        obj.location = (0, 0, 0)
+        obj.rotation_euler = (0, 0, 0)
+        obj.scale = (1, 1, 1)
+
+
+        # setup camera view
+
+        export_cam = funcs.create_export_cam_above_object(obj)
+
+        bpy.data.scenes["Scene"].render.resolution_x = 1080
+        bpy.data.scenes["Scene"].render.resolution_y = 1080
+
+        for area in bpy.context.screen.areas:
+            if area.type == 'VIEW_3D':
+                area.spaces[0].region_3d.view_perspective = 'CAMERA'
+                area.spaces[0].use_local_camera = True
+                area.spaces[0].camera = export_cam
+
+
+        funcs.export_to_svg_ops(obj, self.filepath)
+
+        # restore all to previous state
+
+        obj.location = obj_loc
+        obj.rotation_euler = obj_rot
+        obj.scale = obj_sca
+
+        bpy.data.scenes["Scene"].render.resolution_x = resolution_x
+        bpy.data.scenes["Scene"].render.resolution_y = resolution_y
+
+        for area in areas_view_modes:
+            area_object = area[0]
+
+            area_object.spaces[0].region_3d.view_perspective = 'PERSP'
+            # area_object.spaces[0].region_3d.view_perspective = area[1]
+            area_object.spaces[0].use_local_camera = area[2]
+            area_object.spaces[0].camera = area[3]
+
+        funcs.select_object_solo(export_cam)
+        bpy.ops.object.delete()
+
+        funcs.select_object_solo(obj)
+    
+
+        
+
+        return {'FINISHED'} 
+    
 
 
 classes = [    
     SGF_OT_import,
     SGF_OT_bouton,
     SGF_OT_increment_current_move,
+    SGF_OT_export_to_svg,
 ]
 
 

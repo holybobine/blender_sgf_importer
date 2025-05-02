@@ -11,6 +11,9 @@ def poll_draw_sgf_panel(context):
     
     if not context.object.sgf_settings.is_sgf_object:
         return
+    
+    if not context.object.modifiers:
+        return
 
     return True
 
@@ -41,6 +44,8 @@ class SGF_PT_main_panel(bpy.types.Panel):
         op = layout.operator(operator='sgf.import', text='New board from .sgf file', icon='ADD')
         op.action = 'NEW'
 
+
+        layout.operator(operator='sgf.bouton')
         
 
 
@@ -124,7 +129,10 @@ class SGF_PT_sgf_settings(bpy.types.Panel):
         op = row.operator(operator='sgf.import', text='Change .sgf file', icon='FILEBROWSER')
         op.action = 'UPDATE'
 
-        row.operator(operator='sgf.bouton', text='Export to .csv', icon='EXPORT')
+        op = row.operator(operator='sgf.export_to_svg', text='Export to .csv', icon='EXPORT')
+        op.filepath = funcs.build_temp_name_from_selection(obj)
+
+        layout.operator(operator='sgf.bouton')
 
 
 
