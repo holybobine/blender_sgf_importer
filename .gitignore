@@ -1,8 +1,9 @@
 __pycache__
 _old
+blend_assets/_old
 _sgf
 _exports
+test_file.blend
 *.pyc
 *.sgf
-*.blend
-.svg
+*.svg
