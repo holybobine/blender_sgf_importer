@@ -5,3 +5,4 @@ _exports
 *.pyc
 *.sgf
 *.blend
+.svg

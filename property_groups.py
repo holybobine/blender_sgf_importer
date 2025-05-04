@@ -24,35 +24,49 @@ class SGF_board_props(PropertyGroup):
 
     
 
-    board_width : bpy.props.FloatProperty( # type: ignore
-        name='board_width',
-        default=39.78, 
-        precision=2,
+    board_width : FloatProperty( # type: ignore
+        name='Width',
+        default=397.8,
+        precision=4,
+        subtype='DISTANCE_CAMERA',
         update=lambda self, prop_name: funcs.update_geonode_value_from_property(self, 'board_width')
     )
     
-    board_height : bpy.props.FloatProperty( # type: ignore
-        name='board_height',
-        default=42.66, 
-        precision=2,
+    board_height : FloatProperty( # type: ignore
+        name='Height',
+        default=426.6,
+        precision=4,
+        subtype='DISTANCE_CAMERA',
         update=lambda self, prop_name: funcs.update_geonode_value_from_property(self, 'board_height')
     )
     
-    hoshi_radius : bpy.props.FloatProperty( # type: ignore
-        name='hoshi_radius',
-        default=5.0, 
-        precision=2,
+    hoshi_radius : FloatProperty( # type: ignore
+        name='Hoshis',
+        default=5.0,
+        precision=4,
+        subtype='DISTANCE_CAMERA',
         update=lambda self, prop_name: funcs.update_geonode_value_from_property(self, 'hoshi_radius')
     )
     
-    stone_radius : bpy.props.FloatProperty( # type: ignore
-        name='stone_radius',
-        default=22.0, 
-        precision=2,
+    stone_radius : FloatProperty( # type: ignore
+        name='Stones',
+        default=22.0,
+        precision=4,
+        subtype='DISTANCE_CAMERA',
         update=lambda self, prop_name: funcs.update_geonode_value_from_property(self, 'stone_radius')
     )
 
-    stone_display : bpy.props.BoolProperty( # type: ignore
+    outer_edge_ratio : FloatProperty( # type: ignore
+        name='Edge Margin',
+        default=10,
+        soft_min=0,
+        soft_max=100,
+        subtype='PERCENTAGE',
+        precision=0,
+        update=lambda self, prop_name: funcs.update_geonode_value_from_property(self, 'outer_edge_ratio')
+    )
+
+    stone_display : BoolProperty( # type: ignore
         name='stone_display',
         default=True, 
         update=lambda self, prop_name: funcs.update_geonode_value_from_property(self, 'stone_display')
@@ -82,7 +96,7 @@ class SGF_scene_settings(PropertyGroup):
 
     addon_path = os.path.dirname(__file__)
 
-    assetFilePath : StringProperty(default=os.path.join(addon_path, 'blend_assets', 'blender_sgf_importer_assets_v01.blend')) # type: ignore
+    assetFilePath : StringProperty(default=os.path.join(addon_path, 'blend_assets', 'blender_sgf_importer_assets_v02.blend')) # type: ignore
 
     export_outer_edge : BoolProperty( # type: ignore
         name='Edge',

@@ -28,25 +28,11 @@ class SGF_PT_main_panel(bpy.types.Panel):
         layout = self.layout
         scn = context.scene
         
-        
-
-        # if context.object:
-        #     row = layout.row(align=True)
-        
-        #     op = row.operator(operator='sgf.import', text='Choose .sgf file', icon='FILEBROWSER')
-        #     op.action = 'UPDATE'
-        #     op = row.operator(operator='sgf.import', text='', icon='ADD')
-        #     op.action = 'NEW'
-        # else:
-            # op = layout.operator(operator='sgf.import', text='New board from .sgf file', icon='ADD')
-            # op.action = 'NEW'
 
         op = layout.operator(operator='sgf.import', text='New board from .sgf file', icon='ADD')
         op.action = 'NEW'
 
-
-        layout.operator(operator='sgf.bouton')
-        
+        layout.operator(operator='sgf.bouton')        
 
 
 
@@ -154,7 +140,10 @@ class SGF_PT_board_settings(bpy.types.Panel):
         obj = context.object
         modifier = funcs.get_sgf_modifier(context.object)
 
-        
+        # layout.prop(obj.sgf_settings, 'board_width')
+        # layout.prop(obj.sgf_settings, 'board_height')
+        # layout.prop(obj.sgf_settings, 'hoshi_radius')
+        # layout.prop(obj.sgf_settings, 'stone_radius')
 
         split = layout.split(factor=0.4)
         col1 = split.column(align=True)
@@ -167,46 +156,48 @@ class SGF_PT_board_settings(bpy.types.Panel):
 
         rrow = row.row()
         rrow.enabled = funcs.get_geonode_value_proper(modifier, 'show_board_name')
-        funcs.draw_prop_geonode(rrow, modifier, 'board_name', label=False)
+        funcs.draw_prop_geonode(rrow, modifier, 'board_name', label=False) 
 
         col1.separator()
         col2.separator()
 
-        col1.label(text='Width (cm)')
+        col1.label(text='Outer Edge')
+        col2.prop(obj.sgf_settings, 'outer_edge_ratio', text='')    
+
+        col1.separator()
+        col2.separator()
+
+        col1.label(text='Width')
         col2.prop(obj.sgf_settings, 'board_width', text='')
 
-        col1.label(text='Height (cm)')
+        col1.label(text='Height')
         col2.prop(obj.sgf_settings, 'board_height', text='')
 
         col1.separator()
         col2.separator()
 
-        col1.label(text='Hoshi (mm)')
+        col1.label(text='Hoshi')
         col2.prop(obj.sgf_settings, 'hoshi_radius', text='')
-
-        col1.label(text='Stones (mm)')
-        col2.prop(obj.sgf_settings, 'stone_radius', text='')
 
         col1.separator()
         col2.separator()
 
-        col1.label(text='Stones display')
+        col1.label(text='Stones')
+        col2.prop(obj.sgf_settings, 'stone_radius', text='')
+
         row = col2.row(align=True)
         row.prop(obj.sgf_settings, 'stone_display', text='Wire', toggle=True, invert_checkbox=True)
         row.prop(obj.sgf_settings, 'stone_display', text='Mesh', toggle=True)
-        
-        
-        
 
         box = layout.box()
         col = box.column()
         col.enabled = False
 
-        spacing_x = (obj.sgf_settings.board_width/19)*10
-        spacing_y = (obj.sgf_settings.board_height/19)*10
+        spacing_x = (obj.sgf_settings.board_width/19)
+        spacing_y = (obj.sgf_settings.board_height/19)
 
-        col.label(text='Espacement (horizontal) : %.2f mm'%spacing_x)
-        col.label(text='Espacement (vertical) : %.2f mm'%spacing_y)
+        col.label(text='Line spacing X : %.2f mm'%spacing_x)
+        col.label(text='Line spacing Y : %.2f mm'%spacing_y)
 
 
 classes = [    

@@ -134,9 +134,6 @@ class SGF_OT_export_to_svg(bpy.types.Operator, ExportHelper):
         col2.prop(scn.sgf_settings, 'export_outer_edge')
         col2.prop(scn.sgf_settings, 'export_grid')
         col2.prop(scn.sgf_settings, 'export_hoshis')
-        # funcs.draw_prop_geonode(col2, modifier, 'show_outer_edge', label_name='Outer Edge')
-        # funcs.draw_prop_geonode(col2, modifier, 'show_grid', label_name='Grid')
-        # funcs.draw_prop_geonode(col2, modifier, 'show_hoshis', label_name='Hoshis')
 
         col1.separator()
         col2.separator()
@@ -144,8 +141,6 @@ class SGF_OT_export_to_svg(bpy.types.Operator, ExportHelper):
         col1.label(text='Stones')
         col2.prop(scn.sgf_settings, 'export_black_stones')
         col2.prop(scn.sgf_settings, 'export_white_stones')
-        # funcs.draw_prop_geonode(col2, modifier, 'show_black_stones', label_name='Black')
-        # funcs.draw_prop_geonode(col2, modifier, 'show_white_stones', label_name='White')
     
     def execute(self, context):
 
@@ -177,6 +172,7 @@ class SGF_OT_export_to_svg(bpy.types.Operator, ExportHelper):
         obj_y = 1 - funcs.get_bound_box_max_from_obj(obj)[1]
 
         obj.location = (0, 0, 0)
+        # obj.location = (-1, 1, 0)
         obj.rotation_euler = (0, 0, 0)
         obj.scale = (1, 1, 1)
 
