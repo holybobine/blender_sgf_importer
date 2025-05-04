@@ -131,8 +131,10 @@ class SGF_OT_export_to_svg(bpy.types.Operator, ExportHelper):
         col1.label(text='Board')
         col1.label(text='')
         col1.label(text='')
+        col1.label(text='')
         col2.prop(scn.sgf_settings, 'export_outer_edge')
-        col2.prop(scn.sgf_settings, 'export_grid')
+        col2.prop(scn.sgf_settings, 'export_grid_x')
+        col2.prop(scn.sgf_settings, 'export_grid_y')
         col2.prop(scn.sgf_settings, 'export_hoshis')
 
         col1.separator()

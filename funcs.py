@@ -523,7 +523,8 @@ def export_to_svg_ops(obj, svg_filepath):
     duplicate_modifier = get_sgf_modifier(bpy.context.object)
 
     set_geonode_value_proper(duplicate_modifier, 'show_outer_edge', scn.sgf_settings.export_outer_edge)
-    set_geonode_value_proper(duplicate_modifier, 'show_grid', scn.sgf_settings.export_grid)
+    set_geonode_value_proper(duplicate_modifier, 'show_grid_x', scn.sgf_settings.export_grid_x)
+    set_geonode_value_proper(duplicate_modifier, 'show_grid_y', scn.sgf_settings.export_grid_y)
     set_geonode_value_proper(duplicate_modifier, 'show_hoshis', scn.sgf_settings.export_hoshis)
     set_geonode_value_proper(duplicate_modifier, 'show_black_stones', scn.sgf_settings.export_black_stones)
     set_geonode_value_proper(duplicate_modifier, 'show_white_stones', scn.sgf_settings.export_white_stones)

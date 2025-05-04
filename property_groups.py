@@ -102,8 +102,12 @@ class SGF_scene_settings(PropertyGroup):
         name='Edge',
         default=True,
     )
-    export_grid : BoolProperty( # type: ignore
-        name='Grid',
+    export_grid_x : BoolProperty( # type: ignore
+        name='Grid X',
+        default=True,
+    )
+    export_grid_y : BoolProperty( # type: ignore
+        name='Grid Y',
         default=True,
     )
     export_hoshis : BoolProperty( # type: ignore
