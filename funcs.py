@@ -388,9 +388,17 @@ def set_game_metadata(obj, sgf_path):
 
 
 def update_geonode_value_from_property(self, prop_name):
+
     obj = self.id_data
     modifier = get_sgf_modifier(obj)
     value = obj.sgf_settings[prop_name]
+
+    # convert property value to boolean if gn value is of boolean type
+    gn_value = get_geonode_value_proper(modifier, prop_name)
+    gn_value_type = type(gn_value).__name__
+
+    if gn_value_type == 'bool':
+        value = bool(value)
 
     set_geonode_value_proper(modifier, prop_name, value)
 
@@ -522,12 +530,12 @@ def export_to_svg_ops(obj, svg_filepath):
     scn = bpy.context.scene
     duplicate_modifier = get_sgf_modifier(bpy.context.object)
 
-    set_geonode_value_proper(duplicate_modifier, 'show_outer_edge', scn.sgf_settings.export_outer_edge)
-    set_geonode_value_proper(duplicate_modifier, 'show_grid_x', scn.sgf_settings.export_grid_x)
-    set_geonode_value_proper(duplicate_modifier, 'show_grid_y', scn.sgf_settings.export_grid_y)
-    set_geonode_value_proper(duplicate_modifier, 'show_hoshis', scn.sgf_settings.export_hoshis)
-    set_geonode_value_proper(duplicate_modifier, 'show_black_stones', scn.sgf_settings.export_black_stones)
-    set_geonode_value_proper(duplicate_modifier, 'show_white_stones', scn.sgf_settings.export_white_stones)
+    set_geonode_value_proper(duplicate_modifier, 'show_outer_edge', obj.sgf_settings.show_outer_edge)
+    set_geonode_value_proper(duplicate_modifier, 'show_grid_x', obj.sgf_settings.show_grid_x)
+    set_geonode_value_proper(duplicate_modifier, 'show_grid_y', obj.sgf_settings.show_grid_y)
+    set_geonode_value_proper(duplicate_modifier, 'show_hoshis', obj.sgf_settings.show_hoshis)
+    set_geonode_value_proper(duplicate_modifier, 'show_black_stones', obj.sgf_settings.show_black_stones)
+    set_geonode_value_proper(duplicate_modifier, 'show_white_stones', obj.sgf_settings.show_white_stones)
     set_geonode_value_proper(duplicate_modifier, 'stone_display', 0)
 
     # apply modifier

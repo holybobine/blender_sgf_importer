@@ -26,42 +26,19 @@ class SGF_PT_main_panel(bpy.types.Panel):
 
     def draw(self, context):
         layout = self.layout
-        scn = context.scene
+        scn = context.scene   
+
+        if not bool(poll_draw_sgf_panel(context)):
+            op = layout.operator(operator='sgf.add_new', text='New board from .sgf file', icon='ADD')
+
+            return
         
-
-        op = layout.operator(operator='sgf.import', text='New board from .sgf file', icon='ADD')
-        op.action = 'NEW'
-
-        layout.operator(operator='sgf.bouton')        
-
-
-
-class SGF_PT_sgf_settings(bpy.types.Panel):
-    bl_label = "SGF Settings"
-    bl_idname = "SGF_PT_sgf_settings"
-    bl_space_type = 'VIEW_3D'
-    bl_region_type = 'UI'
-    bl_category = "SGF Importer"
-
-    @classmethod
-    def poll(self, context):
-        return bool(poll_draw_sgf_panel(context))
-
-    def draw(self, context):
-
-        layout = self.layout
-        scn = context.scene
-        
+        row = layout.row(align=True)
+        op = row.operator(operator='sgf.change_sgf_file', text='Change .sgf file', icon='FILEBROWSER')
+        op = row.operator(operator='sgf.add_new', text='', icon='ADD')
 
         obj = context.object
         modifier = funcs.get_sgf_modifier(context.object)
-
-        # row = layout.row(align=True)
-        # row.prop(obj.sgf_settings, 'sgf_filepath', text='')
-        # op = row.operator(operator='sgf.import', text='', icon='FILEBROWSER')
-        # op.action = 'UPDATE'
-
-
 
         row = layout.row()
 
@@ -110,24 +87,13 @@ class SGF_PT_sgf_settings(bpy.types.Panel):
 
         col.prop(obj.sgf_settings, 'current_move', text='Move')
 
-        row = layout.row()
-
-        op = row.operator(operator='sgf.import', text='Change .sgf file', icon='FILEBROWSER')
-        op.action = 'UPDATE'
-
-        op = row.operator(operator='sgf.export_to_svg', text='Export to .svg', icon='EXPORT')
-        op.filepath = funcs.build_temp_name_from_selection(obj)
-
-        layout.operator(operator='sgf.bouton', text='Export all to individual .svg', icon='EXPORT')
-
-
-
 class SGF_PT_board_settings(bpy.types.Panel):
     bl_label = "Board Settings"
     bl_idname = "SGF_PT_board_settings"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
     bl_category = "SGF Importer"
+    bl_parent_id = "SGF_PT_main_panel"
 
     @classmethod
     def poll(self, context):
@@ -189,21 +155,77 @@ class SGF_PT_board_settings(bpy.types.Panel):
         row.prop(obj.sgf_settings, 'stone_display', text='Wire', toggle=True, invert_checkbox=True)
         row.prop(obj.sgf_settings, 'stone_display', text='Mesh', toggle=True)
 
-        box = layout.box()
-        col = box.column()
-        col.enabled = False
+        # box = layout.box()
+        # col = box.column()
+        # col.enabled = False
 
-        spacing_x = (obj.sgf_settings.board_width/19)
-        spacing_y = (obj.sgf_settings.board_height/19)
+        # spacing_x = (obj.sgf_settings.board_width/19)
+        # spacing_y = (obj.sgf_settings.board_height/19)
 
-        col.label(text='Line spacing X : %.2f mm'%spacing_x)
-        col.label(text='Line spacing Y : %.2f mm'%spacing_y)
+        # col.label(text='Line spacing X : %.2f mm'%spacing_x)
+        # col.label(text='Line spacing Y : %.2f mm'%spacing_y)
+
+class SGF_PT_export_settings(bpy.types.Panel):
+    bl_label = "Export Settings"
+    bl_idname = "SGF_PT_export_settings"
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'UI'
+    bl_category = "SGF Importer"
+    bl_parent_id = "SGF_PT_main_panel"
+
+    @classmethod
+    def poll(self, context):
+        return bool(poll_draw_sgf_panel(context))
+
+    def draw(self, context):
+
+        layout = self.layout
+        scn = context.scene
+        
+
+        obj = context.object
+        modifier = funcs.get_sgf_modifier(context.object)
+
+
+        split = layout.split(factor=0.4)
+        col1 = split.column()
+        col1.alignment = 'RIGHT'
+        col2 = split.column()
+
+        col1.label(text='Board')
+        col1.label(text='')
+        col1.label(text='')
+        col1.label(text='')
+        col2.prop(obj.sgf_settings, 'show_outer_edge')
+        col2.prop(obj.sgf_settings, 'show_grid_x')
+        col2.prop(obj.sgf_settings, 'show_grid_y')
+        col2.prop(obj.sgf_settings, 'show_hoshis')
+
+        col1.separator()
+        col2.separator()
+
+        col1.label(text='Stones')
+        col1.label(text='')
+        col2.prop(obj.sgf_settings, 'show_black_stones')
+        col2.prop(obj.sgf_settings, 'show_white_stones')
+
+        
+
+        col1.separator()
+        col2.separator()
+
+        col1.label(text='Export Method')
+        row = col2.row(align=True)
+        row.prop(obj.sgf_settings, 'export_to_single_file', text='')
+
+        op = layout.operator(operator='sgf.export_to_svg', text='Export to .svg', icon='EXPORT')
+        op.filepath = funcs.build_temp_name_from_selection(obj)
 
 
 classes = [    
     SGF_PT_main_panel,
-    SGF_PT_sgf_settings,
     SGF_PT_board_settings,
+    SGF_PT_export_settings,
 ]
 
 

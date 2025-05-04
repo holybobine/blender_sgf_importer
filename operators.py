@@ -11,21 +11,14 @@ from . import funcs
 
 
 
-class SGF_OT_import(bpy.types.Operator, ImportHelper):
-    """"""
-    bl_idname = 'sgf.import'
+class SGF_OT_add_new(bpy.types.Operator, ImportHelper):
+    """Create new board from .sgf file"""
+    bl_idname = 'sgf.add_new'
     bl_label='Import .sgf'
     bl_options = {'UNDO'}
 
     # ImportHelper mixin class uses this
     ext = ".sgf"
-
-    action: bpy.props.EnumProperty( # type: ignore
-        items= (
-                    ("NEW", "New", ""),
-                    ("UPDATE", "Update", "")
-                ),
-    )
 
     filter_glob: StringProperty( # type: ignore
         default='*'+ext,
@@ -46,11 +39,8 @@ class SGF_OT_import(bpy.types.Operator, ImportHelper):
                 )
         else:
 
-            if self.action == 'NEW':
-                obj = funcs.add_new_sgf_object(self, context)
-                funcs.select_object_solo(obj)
-            else:
-                obj = bpy.context.active_object
+            obj = funcs.add_new_sgf_object(self, context)
+            funcs.select_object_solo(obj)
 
             
             funcs.del_all_vertices_in_obj(obj)
@@ -59,6 +49,46 @@ class SGF_OT_import(bpy.types.Operator, ImportHelper):
             
 
         return {'FINISHED'}
+
+class SGF_OT_change_sgf_file(bpy.types.Operator, ImportHelper):
+    """Choose another .sgf file for selected board"""
+    bl_idname = 'sgf.change_sgf_file'
+    bl_label='Choose another .sgf file'
+    bl_options = {'UNDO'}
+
+    # ImportHelper mixin class uses this
+    ext = ".sgf"
+
+    filter_glob: StringProperty( # type: ignore
+        default='*'+ext,
+        options={'HIDDEN'},
+        maxlen=255,
+    )
+
+    def execute(self, context):
+        print('-INF- import new .sgf file')
+
+        file_extension = os.path.splitext(self.filepath)[1]
+
+        if file_extension != '.sgf':
+            funcs.alert(
+                    text='No .sgf file detected',
+                    title='ERROR',
+                    icon='ERROR'
+                )
+        else:
+
+            obj = bpy.context.active_object
+
+            
+            funcs.del_all_vertices_in_obj(obj)
+            funcs.load_board_from_sgf_file(obj, self.filepath)
+            obj.sgf_settings.is_sgf_object = True
+            
+
+        return {'FINISHED'}
+
+
 
 class SGF_OT_increment_current_move(bpy.types.Operator):
     """"""
@@ -99,9 +129,8 @@ class SGF_OT_bouton(bpy.types.Operator):
 
         return {'FINISHED'} 
 
-
 class SGF_OT_export_to_svg(bpy.types.Operator, ExportHelper):
-    """"""
+    """Export board to .svg"""
     bl_idname = 'sgf.export_to_svg'
     bl_label='Export SVG'
     bl_options = {'UNDO'}
@@ -116,33 +145,33 @@ class SGF_OT_export_to_svg(bpy.types.Operator, ExportHelper):
         maxlen=255,  # Max internal buffer length, longer would be clamped.
     )
 
-    def draw(self, context):
-        layout = self.layout
-        scn = context.scene
+    # def draw(self, context):
+    #     layout = self.layout
+    #     scn = context.scene
 
-        obj = context.object
-        modifier = funcs.get_sgf_modifier(context.object)
+    #     obj = context.object
+    #     modifier = funcs.get_sgf_modifier(context.object)
 
-        split = layout.split(factor=0.4)
-        col1 = split.column()
-        col1.alignment = 'RIGHT'
-        col2 = split.column()
+    #     split = layout.split(factor=0.4)
+    #     col1 = split.column()
+    #     col1.alignment = 'RIGHT'
+    #     col2 = split.column()
 
-        col1.label(text='Board')
-        col1.label(text='')
-        col1.label(text='')
-        col1.label(text='')
-        col2.prop(scn.sgf_settings, 'export_outer_edge')
-        col2.prop(scn.sgf_settings, 'export_grid_x')
-        col2.prop(scn.sgf_settings, 'export_grid_y')
-        col2.prop(scn.sgf_settings, 'export_hoshis')
+    #     col1.label(text='Board')
+    #     col1.label(text='')
+    #     col1.label(text='')
+    #     col1.label(text='')
+    #     col2.prop(scn.sgf_settings, 'export_outer_edge')
+    #     col2.prop(scn.sgf_settings, 'export_grid_x')
+    #     col2.prop(scn.sgf_settings, 'export_grid_y')
+    #     col2.prop(scn.sgf_settings, 'export_hoshis')
 
-        col1.separator()
-        col2.separator()
+    #     col1.separator()
+    #     col2.separator()
 
-        col1.label(text='Stones')
-        col2.prop(scn.sgf_settings, 'export_black_stones')
-        col2.prop(scn.sgf_settings, 'export_white_stones')
+    #     col1.label(text='Stones')
+    #     col2.prop(scn.sgf_settings, 'export_black_stones')
+    #     col2.prop(scn.sgf_settings, 'export_white_stones')
     
     def execute(self, context):
 
@@ -225,7 +254,8 @@ class SGF_OT_export_to_svg(bpy.types.Operator, ExportHelper):
 
 
 classes = [    
-    SGF_OT_import,
+    SGF_OT_add_new,
+    SGF_OT_change_sgf_file,
     SGF_OT_bouton,
     SGF_OT_increment_current_move,
     SGF_OT_export_to_svg,

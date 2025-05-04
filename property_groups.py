@@ -71,6 +71,46 @@ class SGF_board_props(PropertyGroup):
         default=True, 
         update=lambda self, prop_name: funcs.update_geonode_value_from_property(self, 'stone_display')
     )
+
+    show_outer_edge : BoolProperty( # type: ignore
+        name='Edge',
+        default=True,
+        update=lambda self, prop_name: funcs.update_geonode_value_from_property(self, 'show_outer_edge')
+    )
+    show_grid_x : BoolProperty( # type: ignore
+        name='Grid X',
+        default=True,
+        update=lambda self, prop_name: funcs.update_geonode_value_from_property(self, 'show_grid_x')
+    )
+    show_grid_y : BoolProperty( # type: ignore
+        name='Grid Y',
+        default=True,
+        update=lambda self, prop_name: funcs.update_geonode_value_from_property(self, 'show_grid_y')
+    )
+    show_hoshis : BoolProperty( # type: ignore
+        name='Hoshis',
+        default=True,
+        update=lambda self, prop_name: funcs.update_geonode_value_from_property(self, 'show_hoshis')
+    )
+    show_black_stones : BoolProperty( # type: ignore
+        name='Black',
+        default=True,
+        update=lambda self, prop_name: funcs.update_geonode_value_from_property(self, 'show_black_stones')
+    )
+    show_white_stones : BoolProperty( # type: ignore
+        name='White',
+        default=True,
+        update=lambda self, prop_name: funcs.update_geonode_value_from_property(self, 'show_white_stones')
+    )
+
+    export_to_single_file : EnumProperty( # type: ignore
+        items=(
+                ('single', 'Single file', 'FILE', 0),
+                ('multiple', 'Multiple files', 'DOCUMENTS', 1),
+            ),
+        name='Export Method',
+        default='single',
+        )
     
 
 
@@ -97,32 +137,6 @@ class SGF_scene_settings(PropertyGroup):
     addon_path = os.path.dirname(__file__)
 
     assetFilePath : StringProperty(default=os.path.join(addon_path, 'blend_assets', 'blender_sgf_importer_assets_v02.blend')) # type: ignore
-
-    export_outer_edge : BoolProperty( # type: ignore
-        name='Edge',
-        default=True,
-    )
-    export_grid_x : BoolProperty( # type: ignore
-        name='Grid X',
-        default=True,
-    )
-    export_grid_y : BoolProperty( # type: ignore
-        name='Grid Y',
-        default=True,
-    )
-    export_hoshis : BoolProperty( # type: ignore
-        name='Hoshis',
-        default=True,
-    )
-    export_black_stones : BoolProperty( # type: ignore
-        name='Black',
-        default=True,
-    )
-    export_white_stones : BoolProperty( # type: ignore
-        name='White',
-        default=True,
-    )
-
 
 classes = [
     SGF_scene_settings,
