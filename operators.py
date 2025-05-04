@@ -88,8 +88,6 @@ class SGF_OT_change_sgf_file(bpy.types.Operator, ImportHelper):
 
         return {'FINISHED'}
 
-
-
 class SGF_OT_increment_current_move(bpy.types.Operator):
     """"""
     bl_idname = "sgf.increment_current_move"
@@ -179,10 +177,6 @@ class SGF_OT_export_to_svg(bpy.types.Operator, ExportHelper):
 
         # store values to be restored
 
-        obj_loc = obj.location.copy()
-        obj_rot = obj.rotation_euler.copy()
-        obj_sca = obj.scale.copy()
-
         resolution_x = bpy.data.scenes["Scene"].render.resolution_x
         resolution_y = bpy.data.scenes["Scene"].render.resolution_y
 
@@ -195,17 +189,6 @@ class SGF_OT_export_to_svg(bpy.types.Operator, ExportHelper):
                     area.spaces[0].use_local_camera,
                     area.spaces[0].camera,
                 ])
-
-
-        # reset obj transforms
-
-        obj_x = -1 - funcs.get_bound_box_min_from_obj(obj)[1]
-        obj_y = 1 - funcs.get_bound_box_max_from_obj(obj)[1]
-
-        obj.location = (0, 0, 0)
-        # obj.location = (-1, 1, 0)
-        obj.rotation_euler = (0, 0, 0)
-        obj.scale = (1, 1, 1)
 
 
         # setup camera view
@@ -225,10 +208,6 @@ class SGF_OT_export_to_svg(bpy.types.Operator, ExportHelper):
         funcs.export_to_svg_ops(obj, self.filepath)
 
         # restore all to previous state
-
-        obj.location = obj_loc
-        obj.rotation_euler = obj_rot
-        obj.scale = obj_sca
 
         bpy.data.scenes["Scene"].render.resolution_x = resolution_x
         bpy.data.scenes["Scene"].render.resolution_y = resolution_y
@@ -250,7 +229,72 @@ class SGF_OT_export_to_svg(bpy.types.Operator, ExportHelper):
         
 
         return {'FINISHED'} 
-    
+
+
+class SGF_OT_export_to_svg_multiple(bpy.types.Operator, ExportHelper):
+    """Export multiple files to .svg"""
+    bl_idname = 'sgf.export_to_svg_multiple'
+    bl_label='Export SVG'
+    bl_options = {'UNDO'}
+
+    filepath = ''
+
+    filename_ext = ".svg"
+
+    filter_glob: StringProperty( # type: ignore
+        default="*.svg",
+        options={'HIDDEN'},
+        maxlen=255,  # Max internal buffer length, longer would be clamped.
+    )
+
+    def solo_layer_on_sgf_object(self, obj, sgf_layers, target_layer):
+
+        modifier = funcs.get_sgf_modifier(obj)
+
+        for layer in sgf_layers:
+            funcs.set_geonode_value_proper(
+                modifier=modifier, 
+                input_name=layer[0], 
+                value=bool(layer[0] == target_layer[0])
+            )
+
+        # display outer edge by default
+        # funcs.set_geonode_value_proper(modifier, 'show_outer_edge', True)
+
+    def execute(self, context):
+        
+        obj = context.object
+        modifier = funcs.get_sgf_modifier(obj)
+
+        sgf_layers = [
+            ['show_outer_edge',  obj.sgf_settings.show_outer_edge],
+            ['show_grid_x', obj.sgf_settings.show_grid_x],
+            ['show_grid_y', obj.sgf_settings.show_grid_y],
+            ['show_hoshis', obj.sgf_settings.show_hoshis],
+            ['show_black_stones', obj.sgf_settings.show_black_stones],
+            ['show_white_stones', obj.sgf_settings.show_white_stones],
+        ]
+
+        for layer in sgf_layers:
+            if layer[1] == True:
+
+                print(f'exporting layer {layer[0]}')
+
+                self.solo_layer_on_sgf_object(obj, sgf_layers, layer)
+
+                bpy.ops.sgf.export_to_svg(
+                    filepath = funcs.build_temp_name_from_selection(obj)
+                )
+
+        for layer in sgf_layers:
+            funcs.set_geonode_value_proper(
+                modifier=modifier, 
+                input_name=layer[0], 
+                value=bool(layer[1])
+            )
+
+
+        return {'FINISHED'} 
 
 
 classes = [    
@@ -259,6 +303,7 @@ classes = [
     SGF_OT_bouton,
     SGF_OT_increment_current_move,
     SGF_OT_export_to_svg,
+    SGF_OT_export_to_svg_multiple,
 ]
 
 

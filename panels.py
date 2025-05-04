@@ -166,7 +166,7 @@ class SGF_PT_board_settings(bpy.types.Panel):
         # col.label(text='Line spacing Y : %.2f mm'%spacing_y)
 
 class SGF_PT_export_settings(bpy.types.Panel):
-    bl_label = "Export Settings"
+    bl_label = "Export"
     bl_idname = "SGF_PT_export_settings"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
@@ -216,9 +216,40 @@ class SGF_PT_export_settings(bpy.types.Panel):
 
         col1.label(text='Export Method')
         row = col2.row(align=True)
-        row.prop(obj.sgf_settings, 'export_to_single_file', text='')
+        row.prop(obj.sgf_settings, 'export_method', text='')
 
-        op = layout.operator(operator='sgf.export_to_svg', text='Export to .svg', icon='EXPORT')
+        nb_files = sum([
+            obj.sgf_settings.show_outer_edge,
+            obj.sgf_settings.show_grid_x,
+            obj.sgf_settings.show_grid_y,
+            obj.sgf_settings.show_hoshis,
+            obj.sgf_settings.show_black_stones,
+            obj.sgf_settings.show_white_stones,
+        ])
+
+        row = layout.row()
+
+        if nb_files == 0:
+            row.alert=True
+            row.enabled = False
+            op_name = 'sgf.export_to_svg'
+            op_text='Nothing to export'
+            op_icon = 'ERROR'
+
+        elif obj.sgf_settings.export_method == 'single':
+            op_name = 'sgf.export_to_svg'
+            op_text='Export to .svg'
+            op_icon = 'EXPORT'
+
+        elif obj.sgf_settings.export_method == 'multiple':
+            op_name = 'sgf.export_to_svg_multiple'
+            # op_name = 'sgf.bouton'
+            op_text=f'Export {nb_files} .svg files'
+            op_icon = 'EXPORT'
+
+
+
+        op = row.operator(operator=op_name, text=op_text, icon=op_icon)
         op.filepath = funcs.build_temp_name_from_selection(obj)
 
 

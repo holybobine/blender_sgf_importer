@@ -103,10 +103,10 @@ class SGF_board_props(PropertyGroup):
         update=lambda self, prop_name: funcs.update_geonode_value_from_property(self, 'show_white_stones')
     )
 
-    export_to_single_file : EnumProperty( # type: ignore
+    export_method : EnumProperty( # type: ignore
         items=(
-                ('single', 'Single file', 'FILE', 0),
-                ('multiple', 'Multiple files', 'DOCUMENTS', 1),
+                ('single', 'Single file', '', 'FILE', 0),
+                ('multiple', 'Multiple files', '', 'DOCUMENTS', 1),
             ),
         name='Export Method',
         default='single',

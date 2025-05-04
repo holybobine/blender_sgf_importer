@@ -450,14 +450,15 @@ def build_temp_name_from_selection(obj):
     modifier = get_sgf_modifier(obj)
 
     edge = 'edge' if get_geonode_value_proper(modifier, 'show_outer_edge') else ''
-    grid = 'grid' if get_geonode_value_proper(modifier, 'show_grid') else ''
+    grid_x = 'grid_x' if get_geonode_value_proper(modifier, 'show_grid_x') else ''
+    grid_y = 'grid_y' if get_geonode_value_proper(modifier, 'show_grid_y') else ''
     hoshis = 'hoshis' if get_geonode_value_proper(modifier, 'show_hoshis') else ''
     black = 'black' if get_geonode_value_proper(modifier, 'show_black_stones') else ''
     white = 'white' if get_geonode_value_proper(modifier, 'show_white_stones') else ''
 
     temp_filename = ''
 
-    for element in [edge, grid, hoshis, black, white]:
+    for element in [edge, grid_x, grid_y, hoshis, black, white]:
         if element != '':
 
             if temp_filename != '':
@@ -520,23 +521,31 @@ def create_export_cam_above_object(obj):
     return camera_object
 
 
+
 def export_to_svg_ops(obj, svg_filepath):
     
     # select object solo and duplicate
     select_object_solo(obj)
+
+    obj_x = -1 - get_bound_box_min_from_obj(obj)[1]
+    obj_y = 1 - get_bound_box_max_from_obj(obj)[1]
+
     bpy.ops.object.duplicate()
+    bpy.context.object.location = (0, 0, 0)
+    bpy.context.object.rotation_euler = (0, 0, 0)
+    bpy.context.object.scale = (1, 1, 1)
 
     # set geonode values based on scene export values
     scn = bpy.context.scene
     duplicate_modifier = get_sgf_modifier(bpy.context.object)
 
-    set_geonode_value_proper(duplicate_modifier, 'show_outer_edge', obj.sgf_settings.show_outer_edge)
-    set_geonode_value_proper(duplicate_modifier, 'show_grid_x', obj.sgf_settings.show_grid_x)
-    set_geonode_value_proper(duplicate_modifier, 'show_grid_y', obj.sgf_settings.show_grid_y)
-    set_geonode_value_proper(duplicate_modifier, 'show_hoshis', obj.sgf_settings.show_hoshis)
-    set_geonode_value_proper(duplicate_modifier, 'show_black_stones', obj.sgf_settings.show_black_stones)
-    set_geonode_value_proper(duplicate_modifier, 'show_white_stones', obj.sgf_settings.show_white_stones)
-    set_geonode_value_proper(duplicate_modifier, 'stone_display', 0)
+    # set_geonode_value_proper(duplicate_modifier, 'show_outer_edge', obj.sgf_settings.show_outer_edge)
+    # set_geonode_value_proper(duplicate_modifier, 'show_grid_x', obj.sgf_settings.show_grid_x)
+    # set_geonode_value_proper(duplicate_modifier, 'show_grid_y', obj.sgf_settings.show_grid_y)
+    # set_geonode_value_proper(duplicate_modifier, 'show_hoshis', obj.sgf_settings.show_hoshis)
+    # set_geonode_value_proper(duplicate_modifier, 'show_black_stones', obj.sgf_settings.show_black_stones)
+    # set_geonode_value_proper(duplicate_modifier, 'show_white_stones', obj.sgf_settings.show_white_stones)
+    set_geonode_value_proper(duplicate_modifier, 'stone_display', False)
 
     # apply modifier
     bpy.ops.object.modifier_apply(modifier=duplicate_modifier.name)
