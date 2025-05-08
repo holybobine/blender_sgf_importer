@@ -225,7 +225,7 @@ class SGF_OT_export_to_svg(bpy.types.Operator, ExportHelper):
 
         funcs.select_object_solo(obj)
     
-
+        context.scene.sgf_settings.last_used_filepath = os.path.dirname(self.filepath)
         
 
         return {'FINISHED'} 
@@ -266,6 +266,12 @@ class SGF_OT_export_to_svg_multiple(bpy.types.Operator, ExportHelper):
         obj = context.object
         modifier = funcs.get_sgf_modifier(obj)
 
+
+        
+        
+        # print(temp_filepath)
+
+
         sgf_layers = [
             ['show_edge',  obj.sgf_settings.show_edge],
             ['show_grid_x', obj.sgf_settings.show_grid_x],
@@ -282,8 +288,13 @@ class SGF_OT_export_to_svg_multiple(bpy.types.Operator, ExportHelper):
 
                 self.solo_layer_on_sgf_object(obj, sgf_layers, layer)
 
+                svg_filepath = funcs.get_svg_filepath_for_single_export_from_modifier(modifier, user_filepath=self.filepath)
+                # filename = funcs.build_filename_from_selection(self, context)
+                
+
                 bpy.ops.sgf.export_to_svg(
-                    filepath = funcs.build_temp_name_from_selection(obj)
+                    # filepath = os.path.join(filename, filepath)
+                    filepath = svg_filepath
                 )
 
         for layer in sgf_layers:
@@ -292,6 +303,9 @@ class SGF_OT_export_to_svg_multiple(bpy.types.Operator, ExportHelper):
                 input_name=layer[0], 
                 value=bool(layer[1])
             )
+
+
+        context.scene.sgf_settings.last_used_filepath = os.path.dirname(self.filepath)
 
 
         return {'FINISHED'} 

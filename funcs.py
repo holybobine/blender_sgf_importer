@@ -446,29 +446,47 @@ def duplicate_gn_modifier_on_target_object(gn_mod, target_obj):
 
     return target_mod
 
-def build_temp_name_from_selection(obj):
-    modifier = get_sgf_modifier(obj)
+def get_svg_filepath_for_multiple_export():
 
-    edge = 'edge' if get_geonode_value_proper(modifier, 'show_edge') else ''
-    grid_x = 'grid_x' if get_geonode_value_proper(modifier, 'show_grid_x') else ''
-    grid_y = 'grid_y' if get_geonode_value_proper(modifier, 'show_grid_y') else ''
-    hoshis = 'hoshis' if get_geonode_value_proper(modifier, 'show_hoshis') else ''
-    black = 'black' if get_geonode_value_proper(modifier, 'show_black_stones') else ''
-    white = 'white' if get_geonode_value_proper(modifier, 'show_white_stones') else ''
+    modifier = get_sgf_modifier(bpy.context.object)
+    board_name = get_geonode_value_proper(modifier, 'board_name')
 
-    temp_filename = ''
+    if board_name == '':
+        board_name = 'temp'
+
+    scn_filepath = bpy.context.scene.sgf_settings.last_used_filepath
+
+    svg_filepath = os.path.join(scn_filepath, board_name)
+
+    return svg_filepath
+
+def get_svg_filepath_for_single_export_from_modifier(modifier, user_filepath=None):
+
+    # get basename
+    if user_filepath:
+        basename = os.path.basename(user_filepath)
+    else:
+        basename = get_geonode_value_proper(modifier, 'board_name')
+
+    if os.path.splitext(basename)[1] in ['.svg', '.sgf']:
+        basename = os.path.splitext(basename)[0]
+
+    # add suffix for each visible element
+    edge = '-edge' if get_geonode_value_proper(modifier, 'show_edge') else ''
+    grid_x = '-gridX' if get_geonode_value_proper(modifier, 'show_grid_x') else ''
+    grid_y = '-gridY' if get_geonode_value_proper(modifier, 'show_grid_y') else ''
+    hoshis = '-hoshis' if get_geonode_value_proper(modifier, 'show_hoshis') else ''
+    black = '-black' if get_geonode_value_proper(modifier, 'show_black_stones') else ''
+    white = '-white' if get_geonode_value_proper(modifier, 'show_white_stones') else ''
 
     for element in [edge, grid_x, grid_y, hoshis, black, white]:
-        if element != '':
+        basename += element
 
-            if temp_filename != '':
-                temp_filename += '_'
+    # add last_used_filepath
+    scn_filepath = bpy.context.scene.sgf_settings.last_used_filepath
+    svg_filepath = os.path.join(scn_filepath, basename + '.svg')
 
-            temp_filename += element
-
-    svg_temp_path = bpy.path.abspath("//") + temp_filename + '.svg'
-
-    return svg_temp_path
+    return svg_filepath
 
 def update_all_viewports():
     for area in bpy.context.window.screen.areas:

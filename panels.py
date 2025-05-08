@@ -235,22 +235,26 @@ class SGF_PT_export_settings(bpy.types.Panel):
             op_name = 'sgf.export_to_svg'
             op_text='Nothing to export'
             op_icon = 'ERROR'
+            svg_filepath = ''
+            
 
         elif obj.sgf_settings.export_method == 'single':
             op_name = 'sgf.export_to_svg'
             op_text='Export to .svg'
             op_icon = 'EXPORT'
+            svg_filepath = funcs.get_svg_filepath_for_single_export_from_modifier(modifier)
 
         elif obj.sgf_settings.export_method == 'multiple':
             op_name = 'sgf.export_to_svg_multiple'
             # op_name = 'sgf.bouton'
             op_text=f'Export {nb_files} .svg files'
             op_icon = 'EXPORT'
+            svg_filepath = funcs.get_svg_filepath_for_multiple_export()
 
 
 
         op = row.operator(operator=op_name, text=op_text, icon=op_icon)
-        op.filepath = funcs.build_temp_name_from_selection(obj)
+        op.filepath = svg_filepath
 
 
 classes = [    
