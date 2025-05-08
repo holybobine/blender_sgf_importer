@@ -449,7 +449,7 @@ def duplicate_gn_modifier_on_target_object(gn_mod, target_obj):
 def build_temp_name_from_selection(obj):
     modifier = get_sgf_modifier(obj)
 
-    edge = 'edge' if get_geonode_value_proper(modifier, 'show_outer_edge') else ''
+    edge = 'edge' if get_geonode_value_proper(modifier, 'show_edge') else ''
     grid_x = 'grid_x' if get_geonode_value_proper(modifier, 'show_grid_x') else ''
     grid_y = 'grid_y' if get_geonode_value_proper(modifier, 'show_grid_y') else ''
     hoshis = 'hoshis' if get_geonode_value_proper(modifier, 'show_hoshis') else ''
@@ -539,7 +539,7 @@ def export_to_svg_ops(obj, svg_filepath):
     scn = bpy.context.scene
     duplicate_modifier = get_sgf_modifier(bpy.context.object)
 
-    # set_geonode_value_proper(duplicate_modifier, 'show_outer_edge', obj.sgf_settings.show_outer_edge)
+    # set_geonode_value_proper(duplicate_modifier, 'show_edge', obj.sgf_settings.show_edge)
     # set_geonode_value_proper(duplicate_modifier, 'show_grid_x', obj.sgf_settings.show_grid_x)
     # set_geonode_value_proper(duplicate_modifier, 'show_grid_y', obj.sgf_settings.show_grid_y)
     # set_geonode_value_proper(duplicate_modifier, 'show_hoshis', obj.sgf_settings.show_hoshis)

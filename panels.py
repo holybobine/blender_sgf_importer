@@ -196,7 +196,7 @@ class SGF_PT_export_settings(bpy.types.Panel):
         col1.label(text='')
         col1.label(text='')
         col1.label(text='')
-        col2.prop(obj.sgf_settings, 'show_outer_edge')
+        col2.prop(obj.sgf_settings, 'show_edge')
         col2.prop(obj.sgf_settings, 'show_grid_x')
         col2.prop(obj.sgf_settings, 'show_grid_y')
         col2.prop(obj.sgf_settings, 'show_hoshis')
@@ -219,7 +219,7 @@ class SGF_PT_export_settings(bpy.types.Panel):
         row.prop(obj.sgf_settings, 'export_method', text='')
 
         nb_files = sum([
-            obj.sgf_settings.show_outer_edge,
+            obj.sgf_settings.show_edge,
             obj.sgf_settings.show_grid_x,
             obj.sgf_settings.show_grid_y,
             obj.sgf_settings.show_hoshis,

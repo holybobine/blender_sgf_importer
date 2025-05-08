@@ -72,10 +72,10 @@ class SGF_board_props(PropertyGroup):
         update=lambda self, prop_name: funcs.update_geonode_value_from_property(self, 'stone_display')
     )
 
-    show_outer_edge : BoolProperty( # type: ignore
+    show_edge : BoolProperty( # type: ignore
         name='Edge',
         default=True,
-        update=lambda self, prop_name: funcs.update_geonode_value_from_property(self, 'show_outer_edge')
+        update=lambda self, prop_name: funcs.update_geonode_value_from_property(self, 'show_edge')
     )
     show_grid_x : BoolProperty( # type: ignore
         name='Grid X',

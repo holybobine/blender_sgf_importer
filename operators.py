@@ -159,7 +159,7 @@ class SGF_OT_export_to_svg(bpy.types.Operator, ExportHelper):
     #     col1.label(text='')
     #     col1.label(text='')
     #     col1.label(text='')
-    #     col2.prop(scn.sgf_settings, 'export_outer_edge')
+    #     col2.prop(scn.sgf_settings, 'export_edge')
     #     col2.prop(scn.sgf_settings, 'export_grid_x')
     #     col2.prop(scn.sgf_settings, 'export_grid_y')
     #     col2.prop(scn.sgf_settings, 'export_hoshis')
@@ -259,7 +259,7 @@ class SGF_OT_export_to_svg_multiple(bpy.types.Operator, ExportHelper):
             )
 
         # display outer edge by default
-        # funcs.set_geonode_value_proper(modifier, 'show_outer_edge', True)
+        # funcs.set_geonode_value_proper(modifier, 'show_edge', True)
 
     def execute(self, context):
         
@@ -267,7 +267,7 @@ class SGF_OT_export_to_svg_multiple(bpy.types.Operator, ExportHelper):
         modifier = funcs.get_sgf_modifier(obj)
 
         sgf_layers = [
-            ['show_outer_edge',  obj.sgf_settings.show_outer_edge],
+            ['show_edge',  obj.sgf_settings.show_edge],
             ['show_grid_x', obj.sgf_settings.show_grid_x],
             ['show_grid_y', obj.sgf_settings.show_grid_y],
             ['show_hoshis', obj.sgf_settings.show_hoshis],
