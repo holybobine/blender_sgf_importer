@@ -10,15 +10,14 @@ from . import funcs
 
 
 
-
-class SGF_OT_add_new(bpy.types.Operator, ImportHelper):
-    """Create new board from .sgf file"""
-    bl_idname = 'sgf.add_new'
-    bl_label='Import .sgf'
+class SGF_OT_import_sgf_file(bpy.types.Operator, ImportHelper):
+    """Import .sgf file"""
+    bl_idname = 'sgf.import_sgf_file'
+    bl_label='Import .sgf file'
     bl_options = {'UNDO'}
 
     # ImportHelper mixin class uses this
-    ext = ".sgf"
+    ext = '.sgf'
 
     filepath = ''
 
@@ -28,43 +27,12 @@ class SGF_OT_add_new(bpy.types.Operator, ImportHelper):
         maxlen=255,
     )
 
-    def execute(self, context):
-        print('-INF- import new .sgf file')
-
-        file_extension = os.path.splitext(self.filepath)[1]
-
-        if file_extension != '.sgf':
-            funcs.alert(
-                    text='No .sgf file detected',
-                    title='ERROR',
-                    icon='ERROR'
-                )
-        else:
-
-            obj = funcs.add_new_sgf_object(self, context)
-            funcs.select_object_solo(obj)
-
-            
-            funcs.del_all_vertices_in_obj(obj)
-            funcs.load_board_from_sgf_file(obj, self.filepath)
-            obj.sgf_settings.is_sgf_object = True
-            
-
-        return {'FINISHED'}
-
-class SGF_OT_change_sgf_file(bpy.types.Operator, ImportHelper):
-    """Choose another .sgf file for selected board"""
-    bl_idname = 'sgf.change_sgf_file'
-    bl_label='Choose another .sgf file'
-    bl_options = {'UNDO'}
-
-    # ImportHelper mixin class uses this
-    ext = ".sgf"
-
-    filter_glob: StringProperty( # type: ignore
-        default='*'+ext,
-        options={'HIDDEN'},
-        maxlen=255,
+    action: EnumProperty( # type: ignore
+        items=(
+                ('NEW', 'Import new .sgf file', ''),
+                ('UPDATE', 'Change .sgf file for current board', ''),
+            ),
+        default='NEW',
     )
 
     def draw(self, context):
@@ -92,32 +60,17 @@ class SGF_OT_change_sgf_file(bpy.types.Operator, ImportHelper):
         game_handicap = funcs.get_metadata_from_sgf_file(self.filepath, 'HA', fail_value='None')
 
 
-        # display ascii board
-        ascii_board = funcs.get_ascii_board_from_sgf_file(self.filepath)
-        funcs.display_ascii_board(layout, ascii_board, board_size)
+        
 
 
-        # display game data
+        # players
         box = layout.box()
         box.label(text='%s (%s)'%(player_black, player_black_rank), icon='NODE_MATERIAL')
 
         box = layout.box()
         box.label(text='%s (%s)'%(player_white, player_white_rank), icon='SHADING_SOLID')
 
-        box = layout.box()
-        split = box.split(factor=0.5)
-        col1 = split.column(align=True)
-        col1.alignment = 'RIGHT'
-        col2 = split.column(align=True)
-
-        split.enabled = False
-
-        # col1.label(text='Date :')
-        # col2.label(text=obj.sgf_settings.game_date)
-
-        col1.label(text='Board Size :')
-        col2.label(text=f'{board_size}x{board_size}')
-
+        # game data
         box = layout.box()
         split = box.split(factor=0.5)
         col1 = split.column(align=True)
@@ -138,14 +91,10 @@ class SGF_OT_change_sgf_file(bpy.types.Operator, ImportHelper):
         col1.label(text='Handicap :')
         col2.label(text=game_handicap)
 
-        
-        
+        # ascii board
+        funcs.display_ascii_board(layout, self.filepath, board_size)
 
-        
-
-
-
-
+       
 
     def execute(self, context):
         print('-INF- import new .sgf file')
@@ -158,14 +107,18 @@ class SGF_OT_change_sgf_file(bpy.types.Operator, ImportHelper):
                     title='ERROR',
                     icon='ERROR'
                 )
-        else:
+            
+            return
 
+        if self.action == 'NEW':
+            obj = funcs.add_new_sgf_object(self, context)
+        elif self.action == 'UPDATE':
             obj = bpy.context.active_object
 
-            
-            funcs.del_all_vertices_in_obj(obj)
-            funcs.load_board_from_sgf_file(obj, self.filepath)
-            obj.sgf_settings.is_sgf_object = True
+        funcs.select_object_solo(obj)
+        funcs.del_all_vertices_in_obj(obj)
+        funcs.load_board_from_sgf_file(obj, self.filepath)
+        obj.sgf_settings.is_sgf_object = True
             
 
         return {'FINISHED'}
@@ -400,8 +353,7 @@ class SGF_OT_export_to_svg_multiple(bpy.types.Operator, ExportHelper):
 
 
 classes = [    
-    SGF_OT_add_new,
-    SGF_OT_change_sgf_file,
+    SGF_OT_import_sgf_file,
     SGF_OT_bouton,
     SGF_OT_increment_current_move,
     SGF_OT_export_to_svg,

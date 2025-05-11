@@ -201,7 +201,9 @@ def get_ascii_board_from_sgf_file(sgf_path, move_number=None):
     try:
         board, plays = sgf_moves.get_setup_and_moves(sgf_game)
     except ValueError as e:
-        raise Exception(str(e))
+        # raise Exception(str(e))
+        print('-ERR-', str(e))
+
     if move_number is not None:
         move_number = max(0, move_number)
         plays = plays[:move_number]
@@ -227,18 +229,24 @@ def get_ascii_board_from_sgf_file(sgf_path, move_number=None):
     return ascii_board
 
 
-def display_ascii_board(layout, ascii_board, board_size):
+def display_ascii_board(layout, sgf_path, board_size):
+    try:
+        ascii_board = get_ascii_board_from_sgf_file(sgf_path)
+    except:
+        box = layout.box()
+        box.alert = True
+        box.label(text='Unable to generate board preview', icon='ERROR')
+
+        return
+
+    if not ascii_board:
+        return
+
     board_array = [char for char in ascii_board if char in ['.', 'o', '#']]
-
-    icon_black_small = 'HOLDOUT_OFF'
-    icon_black_big = 'NODE_MATERIAL'
     
-    icon_white_small = 'RECORD_ON'
-    icon_white_big = 'SHADING_SOLID'
-
     lines_array = []
     line = []
-
+    
     for i, char in enumerate(board_array):
         line.append(char)
         
@@ -246,30 +254,51 @@ def display_ascii_board(layout, ascii_board, board_size):
             lines_array.append(line)
             line = []
 
+    offset_array = ['-', '-', '-'] if board_size == 13 else ['-', '-', '-', '-', '-'] if board_size == 9 else []
+
+    if board_size < 19:
+        for i, line in enumerate(lines_array):
+            lines_array[i] = offset_array + line + offset_array
+
+        offset = int((19 - board_size)/2)
+        blank_line = ['-' for i in range (0,board_size)]
         
 
+        for i in range (0, offset):
+            lines_array.insert(0, blank_line)
+            lines_array.append(['-' for i in range (0, offset)])
 
-    width = 0.6 if board_size == 19 else 0.9 if board_size == 13 else 1.2 if board_size == 9 else 1.0
-
+    # build board preview
     box = layout.box()
+    
     col = box.column(align=True)
-
-    col.scale_x = 50.0
-    col.scale_y = width
-    # col.scale_y = 1.0
+    col.scale_x = 0.55
+    col.scale_y = 0.6
 
     for line in lines_array:
         row = col.row(align=True)
 
         for char in line:
+            if char == '-':
+                row.label(text='', icon='BLANK1')
             if char == '.':
                 row.label(text='', icon='DOT')
             elif char == '#':
-                row.label(text='', icon=icon_black_small if board_size==19 else icon_black_big)
+                row.label(text='', icon='HOLDOUT_OFF')
             elif char == 'o':
-                row.label(text='', icon=icon_white_small if board_size == 19 else icon_white_big)
+                row.label(text='', icon='RECORD_ON')
 
-        
+
+    row = box.row()
+    row.enabled = False
+
+    row_L = row.row()
+    row_L.alignment = 'LEFT'
+    row_R = row.row()
+    row_R.alignment = 'RIGHT'
+
+    row_L.label(text='Board Preview')
+    row_R.label(text=f'{board_size}x{board_size}')
     
 
 
