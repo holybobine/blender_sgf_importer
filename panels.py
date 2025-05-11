@@ -28,7 +28,7 @@ class SGF_PT_main_panel(bpy.types.Panel):
         layout = self.layout
         scn = context.scene  
         
-        layout.operator(operator='sgf.bouton')
+        # layout.operator(operator='sgf.bouton')
 
         if not bool(poll_draw_sgf_panel(context)):
             op = layout.operator(operator='sgf.add_new', text='New board from .sgf file', icon='ADD')
@@ -38,6 +38,15 @@ class SGF_PT_main_panel(bpy.types.Panel):
         row = layout.row(align=True)
         op = row.operator(operator='sgf.change_sgf_file', text='Change .sgf file', icon='FILEBROWSER')
         op = row.operator(operator='sgf.add_new', text='', icon='ADD')
+
+        if not os.path.exists(context.object.sgf_settings.sgf_filepath):
+
+            box = layout.box()
+            box.alert = True
+
+            box.label(text='Can\'t locate .sgf file', icon='ERROR')
+
+            return
 
         obj = context.object
         modifier = funcs.get_sgf_modifier(context.object)
@@ -61,14 +70,16 @@ class SGF_PT_main_panel(bpy.types.Panel):
         # col1.label(text='Date :')
         # col2.label(text=obj.sgf_settings.game_date)
 
+        col1.label(text='Result :')
+        col2.label(text=obj.sgf_settings.game_result)
+
         col1.label(text='Komi :')
         col2.label(text=obj.sgf_settings.game_komi)
         
         col1.label(text='Handicap :')
         col2.label(text=obj.sgf_settings.game_handicap)
 
-        col1.label(text='Result :')
-        col2.label(text=obj.sgf_settings.game_result)
+        
 
         col = layout.column(align=True)
 
