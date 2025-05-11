@@ -58,6 +58,7 @@ class SGF_OT_import_sgf_file(bpy.types.Operator, ImportHelper):
         game_result = funcs.get_metadata_from_sgf_file(self.filepath, 'RE')
         game_komi = funcs.get_metadata_from_sgf_file(self.filepath, 'KM')
         game_handicap = funcs.get_metadata_from_sgf_file(self.filepath, 'HA', fail_value='None')
+        game_date = funcs.get_metadata_from_sgf_file(self.filepath, 'DT')
 
 
         
@@ -82,6 +83,9 @@ class SGF_OT_import_sgf_file(bpy.types.Operator, ImportHelper):
         # col1.label(text='Date :')
         # col2.label(text=obj.sgf_settings.game_date)
 
+        col1.label(text='Date :')
+        col2.label(text=game_date)
+
         col1.label(text='Result :')
         col2.label(text=game_result)
 
@@ -90,6 +94,8 @@ class SGF_OT_import_sgf_file(bpy.types.Operator, ImportHelper):
         
         col1.label(text='Handicap :')
         col2.label(text=game_handicap)
+
+        
 
         # ascii board
         funcs.display_ascii_board(layout, self.filepath, board_size)
