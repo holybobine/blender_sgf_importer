@@ -585,6 +585,7 @@ def export_to_svg_ops(obj, svg_filepath):
     # set_geonode_value_proper(duplicate_modifier, 'show_black_stones', obj.sgf_settings.show_black_stones)
     # set_geonode_value_proper(duplicate_modifier, 'show_white_stones', obj.sgf_settings.show_white_stones)
     set_geonode_value_proper(duplicate_modifier, 'stone_display', False)
+    set_geonode_value_proper(duplicate_modifier, 'show_bounds_cross', True)
 
     # apply modifier
     bpy.ops.object.modifier_apply(modifier=duplicate_modifier.name)
