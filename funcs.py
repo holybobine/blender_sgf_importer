@@ -5,10 +5,10 @@ import math
 import os
 import re
 
-from sgfmill import sgf
-from sgfmill import sgf_moves
-from sgfmill import boards
-from sgfmill import ascii_boards
+from .sgfmill import sgf
+from .sgfmill import sgf_moves
+from .sgfmill import boards
+from .sgfmill import ascii_boards
 
 
 def select_object_solo(obj):
