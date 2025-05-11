@@ -244,13 +244,17 @@ def del_all_vertices_in_obj(obj):
 
 def set_vertices_from_board_array(obj, board_array):
 
+    modifier = get_sgf_modifier(obj)
+
     verts_array = []
     color_array = []
 
+    board_size = get_geonode_value_proper(modifier, 'board_size')
+
     for i, char in enumerate(board_array):
         if char in ['o', '#']:
-            posX = (i%19)/18
-            posY = (-(math.floor(i/19))+18)/18
+            posX = (i%board_size)/(board_size-1)
+            posY = (-(math.floor(i/board_size))+(board_size-1))/(board_size-1)
             posZ = 0.0
             
             color_value = 0.0 if char == 'o' else 1.0 if char =='#' else 0.5
@@ -296,13 +300,29 @@ def get_last_move_from_sgf_file(sgf_path):
     return move_max
 
 def load_board_from_sgf_file(obj, sgf_path, move_number=None):
-    
+
+    # load game metadata
+    load_game_metadata(obj, sgf_path) 
+
+    # set board dimensions
+
+    board_size = obj.sgf_settings.board_size
+    line_spacing_x = 22.1
+    line_spacing_y = 23.7
+
+    obj.sgf_settings.board_width = line_spacing_x * (board_size-1)
+    obj.sgf_settings.board_height = line_spacing_y * (board_size-1)
+
     # generate board mesh
     ascii_board = get_ascii_board_from_sgf_file(sgf_path)
     board_array = [char for char in ascii_board if char in ['.', 'o', '#']]
 
     set_vertices_from_board_array(obj, board_array)
-    set_game_metadata(obj, sgf_path)
+    
+
+    
+
+    print(obj.sgf_settings.board_size)
 
     obj.sgf_settings.current_move = get_last_move_from_sgf_file(sgf_path)
     
@@ -345,7 +365,7 @@ def set_limited_value(self, new_value):
     self['current_move'] = new_value
  
     
-def set_game_metadata(obj, sgf_path):
+def load_game_metadata(obj, sgf_path):
 
     # set geonodes values
     modifier = get_sgf_modifier(obj)
@@ -367,11 +387,12 @@ def set_game_metadata(obj, sgf_path):
     obj.sgf_settings.PW = get_metadata_from_sgf_file(sgf_path, 'PW')
     obj.sgf_settings.PB_rank = get_metadata_from_sgf_file(sgf_path, 'BR', fail_value='?')
     obj.sgf_settings.PW_rank = get_metadata_from_sgf_file(sgf_path, 'WR', fail_value='?')
+
+    obj.sgf_settings.board_size = int(get_metadata_from_sgf_file(sgf_path, 'SZ'))
     
     obj.sgf_settings.game_name = get_metadata_from_sgf_file(sgf_path, 'GN', fail_value='no name found for this game')
     obj.sgf_settings.game_event = get_metadata_from_sgf_file(sgf_path, 'EV')
     obj.sgf_settings.game_app = get_metadata_from_sgf_file(sgf_path, 'AP')
-    obj.sgf_settings.game_size = get_metadata_from_sgf_file(sgf_path, 'SZ')
     obj.sgf_settings.game_rules = get_metadata_from_sgf_file(sgf_path, 'RU')
     obj.sgf_settings.game_date = get_metadata_from_sgf_file(sgf_path, 'DT')
     obj.sgf_settings.game_komi = get_metadata_from_sgf_file(sgf_path, 'KM')

@@ -22,7 +22,11 @@ class SGF_board_props(PropertyGroup):
 
     move_max : IntProperty() # type: ignore
 
-    
+    board_size : IntProperty( # type: ignore
+        name='Board Size',
+        default=19,
+        update=lambda self, prop_name: funcs.update_geonode_value_from_property(self, 'board_size')
+    )
 
     board_width : FloatProperty( # type: ignore
         name='Width',
@@ -122,7 +126,6 @@ class SGF_board_props(PropertyGroup):
     game_name : StringProperty() # type: ignore
     game_event : StringProperty() # type: ignore
     game_app : StringProperty() # type: ignore
-    game_size : StringProperty() # type: ignore
     game_rules : StringProperty() # type: ignore
     game_date : StringProperty() # type: ignore
     game_komi : StringProperty() # type: ignore

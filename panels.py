@@ -26,7 +26,9 @@ class SGF_PT_main_panel(bpy.types.Panel):
 
     def draw(self, context):
         layout = self.layout
-        scn = context.scene   
+        scn = context.scene  
+        
+        layout.operator(operator='sgf.bouton')
 
         if not bool(poll_draw_sgf_panel(context)):
             op = layout.operator(operator='sgf.add_new', text='New board from .sgf file', icon='ADD')
@@ -192,6 +194,15 @@ class SGF_PT_export_settings(bpy.types.Panel):
         col1.alignment = 'RIGHT'
         col2 = split.column()
 
+        
+
+        col1.label(text='Export Method')
+        row = col2.row(align=True)
+        row.prop(obj.sgf_settings, 'export_method', text='')
+
+        col1.separator()
+        col2.separator()
+
         col1.label(text='Board')
         col1.label(text='')
         col1.label(text='')
@@ -208,15 +219,6 @@ class SGF_PT_export_settings(bpy.types.Panel):
         col1.label(text='')
         col2.prop(obj.sgf_settings, 'show_black_stones')
         col2.prop(obj.sgf_settings, 'show_white_stones')
-
-        
-
-        col1.separator()
-        col2.separator()
-
-        col1.label(text='Export Method')
-        row = col2.row(align=True)
-        row.prop(obj.sgf_settings, 'export_method', text='')
 
         nb_files = sum([
             obj.sgf_settings.show_edge,
