@@ -97,7 +97,6 @@ def get_metadata_from_sgf_file(sgf_path, prefix, fail_value='unkown'):
         result = sgf_src.split(prefix+'[')[1].split(']')[0]
         return result
     except Exception as e:
-        print(e)
         return fail_value
 
 def set_geonode_value_proper(modifier, input_name, value):
@@ -188,9 +187,9 @@ Show the position from an SGF file. If a move number is specified, the position
 before that move is shown (this is to match the behaviour of GTP loadsgf).
 """
 
-def get_ascii_board_from_sgf_file(pathname, move_number=None):
+def get_ascii_board_from_sgf_file(sgf_path, move_number=None):
     
-    f = open(pathname, "rb")
+    f = open(sgf_path, "rb")
     sgf_src = f.read()    
     f.close()
         
@@ -212,8 +211,6 @@ def get_ascii_board_from_sgf_file(pathname, move_number=None):
         move_number = last_move
         plays = plays[:move_number]
         
-        
-
     for colour, move in plays:
         if move is None:
             continue
@@ -228,6 +225,53 @@ def get_ascii_board_from_sgf_file(pathname, move_number=None):
     
     
     return ascii_board
+
+
+def display_ascii_board(layout, ascii_board, board_size):
+    board_array = [char for char in ascii_board if char in ['.', 'o', '#']]
+
+    icon_black_small = 'HOLDOUT_OFF'
+    icon_black_big = 'NODE_MATERIAL'
+    
+    icon_white_small = 'RECORD_ON'
+    icon_white_big = 'SHADING_SOLID'
+
+    lines_array = []
+    line = []
+
+    for i, char in enumerate(board_array):
+        line.append(char)
+        
+        if len(line) == board_size:
+            lines_array.append(line)
+            line = []
+
+        
+
+
+    width = 0.6 if board_size == 19 else 0.9 if board_size == 13 else 1.2 if board_size == 9 else 1.0
+
+    box = layout.box()
+    col = box.column(align=True)
+
+    col.scale_x = 50.0
+    col.scale_y = width
+    # col.scale_y = 1.0
+
+    for line in lines_array:
+        row = col.row(align=True)
+
+        for char in line:
+            if char == '.':
+                row.label(text='', icon='DOT')
+            elif char == '#':
+                row.label(text='', icon=icon_black_small if board_size==19 else icon_black_big)
+            elif char == 'o':
+                row.label(text='', icon=icon_white_small if board_size == 19 else icon_white_big)
+
+        
+    
+
 
 def del_all_vertices_in_obj(obj):
     bpy.ops.object.mode_set(mode='EDIT')

@@ -20,6 +20,8 @@ class SGF_OT_add_new(bpy.types.Operator, ImportHelper):
     # ImportHelper mixin class uses this
     ext = ".sgf"
 
+    filepath = ''
+
     filter_glob: StringProperty( # type: ignore
         default='*'+ext,
         options={'HIDDEN'},
@@ -64,6 +66,86 @@ class SGF_OT_change_sgf_file(bpy.types.Operator, ImportHelper):
         options={'HIDDEN'},
         maxlen=255,
     )
+
+    def draw(self, context):
+        if not os.path.exists(self.filepath):
+            return
+        
+        if not os.path.splitext(self.filepath)[1] == '.sgf':
+            return
+        
+        layout = self.layout
+        scn = context.scene
+
+        
+        # retrieve game data
+        player_black = funcs.get_metadata_from_sgf_file(self.filepath, 'PB')
+        player_white = funcs.get_metadata_from_sgf_file(self.filepath, 'PW')
+        
+        player_black_rank = funcs.get_metadata_from_sgf_file(self.filepath, 'BR', fail_value='?')
+        player_white_rank = funcs.get_metadata_from_sgf_file(self.filepath, 'WR', fail_value='?')
+
+        board_size = int(funcs.get_metadata_from_sgf_file(self.filepath, 'SZ'))
+
+        game_result = funcs.get_metadata_from_sgf_file(self.filepath, 'RE')
+        game_komi = funcs.get_metadata_from_sgf_file(self.filepath, 'KM')
+        game_handicap = funcs.get_metadata_from_sgf_file(self.filepath, 'HA', fail_value='None')
+
+
+        # display ascii board
+        ascii_board = funcs.get_ascii_board_from_sgf_file(self.filepath)
+        funcs.display_ascii_board(layout, ascii_board, board_size)
+
+
+        # display game data
+        box = layout.box()
+        box.label(text='%s (%s)'%(player_black, player_black_rank), icon='NODE_MATERIAL')
+
+        box = layout.box()
+        box.label(text='%s (%s)'%(player_white, player_white_rank), icon='SHADING_SOLID')
+
+        box = layout.box()
+        split = box.split(factor=0.5)
+        col1 = split.column(align=True)
+        col1.alignment = 'RIGHT'
+        col2 = split.column(align=True)
+
+        split.enabled = False
+
+        # col1.label(text='Date :')
+        # col2.label(text=obj.sgf_settings.game_date)
+
+        col1.label(text='Board Size :')
+        col2.label(text=f'{board_size}x{board_size}')
+
+        box = layout.box()
+        split = box.split(factor=0.5)
+        col1 = split.column(align=True)
+        col1.alignment = 'RIGHT'
+        col2 = split.column(align=True)
+
+        split.enabled = False
+
+        # col1.label(text='Date :')
+        # col2.label(text=obj.sgf_settings.game_date)
+
+        col1.label(text='Result :')
+        col2.label(text=game_result)
+
+        col1.label(text='Komi :')
+        col2.label(text=game_komi)
+        
+        col1.label(text='Handicap :')
+        col2.label(text=game_handicap)
+
+        
+        
+
+        
+
+
+
+
 
     def execute(self, context):
         print('-INF- import new .sgf file')
@@ -124,6 +206,12 @@ class SGF_OT_bouton(bpy.types.Operator):
         print('BOUTON')
 
         # funcs.set_view_top()
+
+        sgf_path = context.object.sgf_settings.sgf_filepath
+        board_size = 19
+
+        ascii_board = funcs.get_ascii_board_from_sgf_file(sgf_path)
+        funcs.display_ascii_board(ascii_board, board_size)
 
         return {'FINISHED'} 
 

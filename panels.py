@@ -47,9 +47,17 @@ class SGF_PT_main_panel(bpy.types.Panel):
             box.label(text='Can\'t locate .sgf file', icon='ERROR')
 
             return
+        
+        
 
         obj = context.object
         modifier = funcs.get_sgf_modifier(context.object)
+
+        # sgf_path = context.object.sgf_settings.sgf_filepath
+        # board_size = context.object.sgf_settings.board_size
+        # ascii_board = funcs.get_ascii_board_from_sgf_file(sgf_path)
+
+        # funcs.display_ascii_board(layout, ascii_board, board_size)
 
         row = layout.row()
 
