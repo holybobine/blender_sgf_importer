@@ -31,13 +31,17 @@ class SGF_PT_main_panel(bpy.types.Panel):
         # layout.operator(operator='sgf.bouton')
 
         if not bool(poll_draw_sgf_panel(context)):
-            op = layout.operator(operator='sgf.add_new', text='New board from .sgf file', icon='ADD')
+            op = layout.operator(operator='sgf.import_sgf_file', text='New board from .sgf file', icon='ADD')
+            op.action = 'NEW'
 
             return
         
         row = layout.row(align=True)
-        op = row.operator(operator='sgf.change_sgf_file', text='Change .sgf file', icon='FILEBROWSER')
-        op = row.operator(operator='sgf.add_new', text='', icon='ADD')
+        op = row.operator(operator='sgf.import_sgf_file', text='Change .sgf file', icon='FILEBROWSER')
+        op.action = 'UPDATE'
+
+        op = row.operator(operator='sgf.import_sgf_file', text='', icon='ADD')
+        op.action = 'NEW'
 
         if not os.path.exists(context.object.sgf_settings.sgf_filepath):
 
@@ -55,9 +59,8 @@ class SGF_PT_main_panel(bpy.types.Panel):
 
         # sgf_path = context.object.sgf_settings.sgf_filepath
         # board_size = context.object.sgf_settings.board_size
-        # ascii_board = funcs.get_ascii_board_from_sgf_file(sgf_path)
 
-        # funcs.display_ascii_board(layout, ascii_board, board_size)
+        # funcs.display_ascii_board(layout, sgf_path, board_size)
 
         row = layout.row()
 
