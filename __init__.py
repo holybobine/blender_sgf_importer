@@ -15,8 +15,8 @@ bl_info = {
     "name" : "SGF Importer",
     "author" : "holybobine",
     "description" : "",
-    "blender" : (4, 0, 0),
-    "version" : (0, 1, 0),
+    "blender" : (4, 2, 3),
+    "version" : (0, 0, 1),
     "location" : "",
     "warning" : "",
     "category" : "3D View"
