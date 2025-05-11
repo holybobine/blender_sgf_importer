@@ -7,9 +7,10 @@ from . import funcs
 
 class SGF_board_props(PropertyGroup):
 
-    is_sgf_object : BoolProperty(default=False) # type: ignore
-    
     sgf_filepath : StringProperty() # type: ignore
+
+    is_valid_sgf_file : BoolProperty(default=False) # type: ignore
+    is_sgf_object : BoolProperty(default=False) # type: ignore
 
     current_move : IntProperty( # type: ignore
         name='Target Move',

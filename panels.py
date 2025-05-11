@@ -17,6 +17,16 @@ def poll_draw_sgf_panel(context):
 
     return True
 
+def poll_draw_sgf_settings(context):
+    if not bool(poll_draw_sgf_panel(context)):
+        return
+
+    if not context.object.sgf_settings.is_valid_sgf_file:
+        return
+
+    return True
+
+
 class SGF_PT_main_panel(bpy.types.Panel):
     bl_label = "SGF Importer"
     bl_idname = "SGF_PT_main_panel"
@@ -44,10 +54,8 @@ class SGF_PT_main_panel(bpy.types.Panel):
         op.action = 'NEW'
 
         if not os.path.exists(context.object.sgf_settings.sgf_filepath):
-
             box = layout.box()
             box.alert = True
-
             box.label(text='Can\'t locate .sgf file', icon='ERROR')
 
             return
@@ -90,7 +98,12 @@ class SGF_PT_main_panel(bpy.types.Panel):
         col1.label(text='Handicap :')
         col2.label(text=obj.sgf_settings.game_handicap)
 
-        
+        if not obj.sgf_settings.is_valid_sgf_file:
+            box = layout.box()
+            box.alert = True
+            box.label(text='Error while decoding .sgf file', icon='ERROR')
+
+            return
 
         col = layout.column(align=True)
 
@@ -121,7 +134,7 @@ class SGF_PT_board_settings(bpy.types.Panel):
 
     @classmethod
     def poll(self, context):
-        return bool(poll_draw_sgf_panel(context))
+        return bool(poll_draw_sgf_settings(context))
 
     def draw(self, context):
         layout = self.layout
@@ -199,7 +212,7 @@ class SGF_PT_export_settings(bpy.types.Panel):
 
     @classmethod
     def poll(self, context):
-        return bool(poll_draw_sgf_panel(context))
+        return bool(poll_draw_sgf_settings(context))
 
     def draw(self, context):
 

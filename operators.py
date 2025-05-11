@@ -53,7 +53,7 @@ class SGF_OT_import_sgf_file(bpy.types.Operator, ImportHelper):
         player_black_rank = funcs.get_metadata_from_sgf_file(self.filepath, 'BR', fail_value='?')
         player_white_rank = funcs.get_metadata_from_sgf_file(self.filepath, 'WR', fail_value='?')
 
-        board_size = int(funcs.get_metadata_from_sgf_file(self.filepath, 'SZ'))
+        board_size = funcs.get_board_size(self.filepath)
 
         game_result = funcs.get_metadata_from_sgf_file(self.filepath, 'RE')
         game_komi = funcs.get_metadata_from_sgf_file(self.filepath, 'KM')
@@ -118,7 +118,7 @@ class SGF_OT_import_sgf_file(bpy.types.Operator, ImportHelper):
         funcs.select_object_solo(obj)
         funcs.del_all_vertices_in_obj(obj)
         funcs.load_board_from_sgf_file(obj, self.filepath)
-        obj.sgf_settings.is_sgf_object = True
+        
             
 
         return {'FINISHED'}

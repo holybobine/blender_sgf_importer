@@ -228,6 +228,12 @@ def get_ascii_board_from_sgf_file(sgf_path, move_number=None):
     
     return ascii_board
 
+def get_board_size(sgf_path):
+    try:
+        return int(get_metadata_from_sgf_file(sgf_path, 'SZ'))
+    except:
+        print(f'-ERR- <{os.path.basename(sgf_path)}> failed to detect board size, default to 19x19')
+        return 19
 
 def display_ascii_board(layout, sgf_path, board_size):
     try:
@@ -235,7 +241,7 @@ def display_ascii_board(layout, sgf_path, board_size):
     except:
         box = layout.box()
         box.alert = True
-        box.label(text='Unable to generate board preview', icon='ERROR')
+        box.label(text='Unable to generate .sgf preview', icon='ERROR')
 
         return
 
@@ -374,11 +380,23 @@ def get_last_move_from_sgf_file(sgf_path):
 
 def load_board_from_sgf_file(obj, sgf_path, move_number=None):
 
+    # try to decode .sgf file
+    try:
+        ascii_board = get_ascii_board_from_sgf_file(sgf_path)
+    except:
+        print('-ERR- Error while decoding .sgf file')
+        obj.sgf_settings.is_valid_sgf_file = False
+        
+        return
+    
+    # generate board mesh
+    board_array = [char for char in ascii_board if char in ['.', 'o', '#']]
+    set_vertices_from_board_array(obj, board_array)
+
     # load game metadata
-    load_game_metadata(obj, sgf_path) 
+    load_game_metadata(obj, sgf_path)
 
     # set board dimensions
-
     board_size = obj.sgf_settings.board_size
     line_spacing_x = 22.1
     line_spacing_y = 23.7
@@ -386,22 +404,10 @@ def load_board_from_sgf_file(obj, sgf_path, move_number=None):
     obj.sgf_settings.board_width = line_spacing_x * (board_size-1)
     obj.sgf_settings.board_height = line_spacing_y * (board_size-1)
 
-    # generate board mesh
-    ascii_board = get_ascii_board_from_sgf_file(sgf_path)
-    board_array = [char for char in ascii_board if char in ['.', 'o', '#']]
-
-    set_vertices_from_board_array(obj, board_array)
-    
-
-    
-
-    print(obj.sgf_settings.board_size)
-
+    # set object properties
     obj.sgf_settings.current_move = get_last_move_from_sgf_file(sgf_path)
-    
-
-    
-
+    obj.sgf_settings.is_valid_sgf_file = True
+    obj.sgf_settings.is_sgf_object = True
 
 
 
@@ -461,7 +467,7 @@ def load_game_metadata(obj, sgf_path):
     obj.sgf_settings.PB_rank = get_metadata_from_sgf_file(sgf_path, 'BR', fail_value='?')
     obj.sgf_settings.PW_rank = get_metadata_from_sgf_file(sgf_path, 'WR', fail_value='?')
 
-    obj.sgf_settings.board_size = int(get_metadata_from_sgf_file(sgf_path, 'SZ'))
+    obj.sgf_settings.board_size = get_board_size(sgf_path)
     
     obj.sgf_settings.game_name = get_metadata_from_sgf_file(sgf_path, 'GN', fail_value='no name found for this game')
     obj.sgf_settings.game_event = get_metadata_from_sgf_file(sgf_path, 'EV')
