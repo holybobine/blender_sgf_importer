@@ -212,85 +212,6 @@ def update_geonode_value_from_property(self, prop_name):
 
     set_geonode_value_proper(modifier, prop_name, value)
 
-
-
-
-
-# SGF funcs
-def get_sgf_modifier(obj):
-    for m in obj.modifiers:
-        if m.type == 'NODES':
-            if m.node_group.name == 'procedural_goban':
-                return m
-
-def get_metadata_from_sgf_file(sgf_path, prefix, fail_value='unkown'):
-
-    sgf_game = get_sgf_game_from_file(sgf_path)
-    charset = sgf_game.get_charset()
-
-    sgf_src = str(read_src_from_sgf_file(sgf_path).decode(charset))
-
-    # will search for a string that's between '[]'
-    # and preceeded by the given prefix
-
-    try:
-        result = sgf_src.split(prefix+'[')[1].split(']')[0]
-        return result
-    except Exception as e:
-        return fail_value
-
-def get_ascii_board_from_sgf_file(sgf_path, move_number=None):
-    _description = """\
-    Show the position from an SGF file. If a move number is specified, the position
-    before that move is shown (this is to match the behaviour of GTP loadsgf).
-    """
-    
-    f = open(sgf_path, "rb")
-    sgf_src = f.read()    
-    f.close()
-        
-    try:
-        sgf_game = sgf.Sgf_game.from_bytes(sgf_src)
-    except ValueError:
-        raise Exception("bad sgf file")
-
-    try:
-        board, plays = sgf_moves.get_setup_and_moves(sgf_game)
-    except ValueError as e:
-        # raise Exception(str(e))
-        print('-ERR-', str(e))
-
-    if move_number is not None:
-        move_number = max(0, move_number)
-        plays = plays[:move_number]
-    else:
-        moves = [n for n in sgf_game.get_main_sequence()]
-        last_move = len(moves)
-        move_number = last_move
-        plays = plays[:move_number]
-        
-    for colour, move in plays:
-        if move is None:
-            continue
-        row, col = move
-        try:
-            board.play(row, col, colour)
-        except ValueError:
-            raise Exception("illegal move in sgf file")
-
-
-    ascii_board = ascii_boards.render_board(board)
-    
-    
-    return ascii_board
-
-def get_board_size(sgf_path):
-    try:
-        return int(get_metadata_from_sgf_file(sgf_path, 'SZ'))
-    except:
-        print(f'-ERR- <{os.path.basename(sgf_path)}> failed to detect board size, default to 19x19')
-        return 19
-
 def display_ascii_board(layout, sgf_path, board_size):
     try:
         ascii_board = get_ascii_board_from_sgf_file(sgf_path)
@@ -362,40 +283,33 @@ def display_ascii_board(layout, sgf_path, board_size):
     row_L.label(text='Board Preview')
     row_R.label(text=f'{board_size}x{board_size}')
 
-def set_vertices_from_board_array(obj, board_array):
-
-    modifier = get_sgf_modifier(obj)
-
-    verts_array = []
-    color_array = []
-
-    board_size = get_geonode_value_proper(modifier, 'board_size')
-
-    for i, char in enumerate(board_array):
-        if char in ['o', '#']:
-            posX = (i%board_size)/(board_size-1)
-            posY = (-(math.floor(i/board_size))+(board_size-1))/(board_size-1)
-            posZ = 0.0
-            
-            color_value = 0.0 if char == 'o' else 1.0 if char =='#' else 0.5
-            
-            verts_array.append((posX, posY, posZ))
-            color_array.append(color_value)            
 
 
-    del_all_vertices_from_object(obj)
 
-    mesh_data = obj.data
-    mesh_data.from_pydata(verts_array, [], [])
-    mesh_data.update()
+# SGF funcs
 
-    for vg in obj.vertex_groups:
-        obj.vertex_groups.remove(vg)
-        
-    stone_color = obj.vertex_groups.new(name='stone_color')
+def add_new_sgf_object(self, context):
+    scn = context.scene
+    assetFile = scn.sgf_settings.assetFilePath
 
-    for i, color_value in enumerate(color_array):
-        stone_color.add([i], color_value, 'ADD' )
+    append_from_blend_file(assetFile, 'NodeTree', 'procedural_goban', forceImport=False)
+
+    obj = create_new_object('sgf_object')
+    
+    mod = obj.modifiers.new("SGF_geonodes", 'NODES')
+    # mod.node_group = bpy.data.node_groups['procedural_goban'].copy()
+    mod.node_group = bpy.data.node_groups['procedural_goban']
+
+
+    return obj
+
+def get_sgf_modifier(obj):
+    for m in obj.modifiers:
+        if m.type == 'NODES':
+            if m.node_group.name == 'procedural_goban':
+                return m
+
+
 
 def read_src_from_sgf_file(sgf_path):
     f = open(sgf_path, "rb")
@@ -410,43 +324,23 @@ def get_sgf_game_from_file(sgf_path):
 
     return sgf_game
 
-def get_last_move_from_sgf_file(sgf_path):
+
+
+def get_metadata_from_sgf_file(sgf_path, prefix, fail_value='unkown'):
+
     sgf_game = get_sgf_game_from_file(sgf_path)
+    charset = sgf_game.get_charset()
 
-    move_max = len([node for node in sgf_game.get_main_sequence()])-1
+    sgf_src = str(read_src_from_sgf_file(sgf_path).decode(charset))
 
-    return move_max
+    # will search for a string that's between '[]'
+    # and preceeded by the given prefix
 
-def load_board_from_sgf_file(obj, sgf_path, move_number=None):
-
-    # try to decode .sgf file
     try:
-        ascii_board = get_ascii_board_from_sgf_file(sgf_path)
-    except:
-        print('-ERR- Error while decoding .sgf file')
-        obj.sgf_settings.is_valid_sgf_file = False
-        
-        return
-    
-    # generate board mesh
-    board_array = [char for char in ascii_board if char in ['.', 'o', '#']]
-    set_vertices_from_board_array(obj, board_array)
-
-    # load game metadata
-    load_game_metadata(obj, sgf_path)
-
-    # set board dimensions
-    board_size = obj.sgf_settings.board_size
-    line_spacing_x = 22.1
-    line_spacing_y = 23.7
-
-    obj.sgf_settings.board_width = line_spacing_x * (board_size-1)
-    obj.sgf_settings.board_height = line_spacing_y * (board_size-1)
-
-    # set object properties
-    obj.sgf_settings.current_move = get_last_move_from_sgf_file(sgf_path)
-    obj.sgf_settings.is_valid_sgf_file = True
-    obj.sgf_settings.is_sgf_object = True
+        result = sgf_src.split(prefix+'[')[1].split(']')[0]
+        return result
+    except Exception as e:
+        return fail_value
 
 def load_game_metadata(obj, sgf_path):
 
@@ -488,6 +382,135 @@ def load_game_metadata(obj, sgf_path):
     # sgf_src = read_src_from_sgf_file(sgf_path)
     # print(sgf_src)
 
+
+
+def get_ascii_board_from_sgf_file(sgf_path, move_number=None):
+    _description = """\
+    Show the position from an SGF file. If a move number is specified, the position
+    before that move is shown (this is to match the behaviour of GTP loadsgf).
+    """
+    
+    f = open(sgf_path, "rb")
+    sgf_src = f.read()    
+    f.close()
+        
+    try:
+        sgf_game = sgf.Sgf_game.from_bytes(sgf_src)
+    except ValueError:
+        raise Exception("bad sgf file")
+
+    try:
+        board, plays = sgf_moves.get_setup_and_moves(sgf_game)
+    except ValueError as e:
+        # raise Exception(str(e))
+        print('-ERR-', str(e))
+
+    if move_number is not None:
+        move_number = max(0, move_number)
+        plays = plays[:move_number]
+    else:
+        moves = [n for n in sgf_game.get_main_sequence()]
+        last_move = len(moves)
+        move_number = last_move
+        plays = plays[:move_number]
+        
+    for colour, move in plays:
+        if move is None:
+            continue
+        row, col = move
+        try:
+            board.play(row, col, colour)
+        except ValueError:
+            raise Exception("illegal move in sgf file")
+
+
+    ascii_board = ascii_boards.render_board(board)
+    
+    
+    return ascii_board
+
+def get_board_size(sgf_path):
+    try:
+        return int(get_metadata_from_sgf_file(sgf_path, 'SZ'))
+    except:
+        print(f'-ERR- <{os.path.basename(sgf_path)}> failed to detect board size, default to 19x19')
+        return 19
+
+def get_last_move_from_sgf_file(sgf_path):
+    sgf_game = get_sgf_game_from_file(sgf_path)
+
+    move_max = len([node for node in sgf_game.get_main_sequence()])-1
+
+    return move_max
+
+
+
+def set_vertices_from_board_array(obj, board_array):
+
+    modifier = get_sgf_modifier(obj)
+
+    verts_array = []
+    color_array = []
+
+    board_size = get_geonode_value_proper(modifier, 'board_size')
+
+    for i, char in enumerate(board_array):
+        if char in ['o', '#']:
+            posX = (i%board_size)/(board_size-1)
+            posY = (-(math.floor(i/board_size))+(board_size-1))/(board_size-1)
+            posZ = 0.0
+            
+            color_value = 0.0 if char == 'o' else 1.0 if char =='#' else 0.5
+            
+            verts_array.append((posX, posY, posZ))
+            color_array.append(color_value)            
+
+
+    del_all_vertices_from_object(obj)
+
+    mesh_data = obj.data
+    mesh_data.from_pydata(verts_array, [], [])
+    mesh_data.update()
+
+    for vg in obj.vertex_groups:
+        obj.vertex_groups.remove(vg)
+        
+    stone_color = obj.vertex_groups.new(name='stone_color')
+
+    for i, color_value in enumerate(color_array):
+        stone_color.add([i], color_value, 'ADD' )
+
+def load_board_from_sgf_file(obj, sgf_path, move_number=None):
+
+    # try to decode .sgf file
+    try:
+        ascii_board = get_ascii_board_from_sgf_file(sgf_path)
+    except:
+        print('-ERR- Error while decoding .sgf file')
+        obj.sgf_settings.is_valid_sgf_file = False
+        
+        return
+    
+    # generate board mesh
+    board_array = [char for char in ascii_board if char in ['.', 'o', '#']]
+    set_vertices_from_board_array(obj, board_array)
+
+    # load game metadata
+    load_game_metadata(obj, sgf_path)
+
+    # set board dimensions
+    board_size = obj.sgf_settings.board_size
+    line_spacing_x = 22.1
+    line_spacing_y = 23.7
+
+    obj.sgf_settings.board_width = line_spacing_x * (board_size-1)
+    obj.sgf_settings.board_height = line_spacing_y * (board_size-1)
+
+    # set object properties
+    obj.sgf_settings.current_move = get_last_move_from_sgf_file(sgf_path)
+    obj.sgf_settings.is_valid_sgf_file = True
+    obj.sgf_settings.is_sgf_object = True
+
 def update_board_from_move(self, context):
 
     obj = context.object
@@ -506,20 +529,6 @@ def update_board_from_move(self, context):
 
     set_vertices_from_board_array(obj, board_array)
 
-def add_new_sgf_object(self, context):
-    scn = context.scene
-    assetFile = scn.sgf_settings.assetFilePath
-
-    append_from_blend_file(assetFile, 'NodeTree', 'procedural_goban', forceImport=False)
-
-    obj = create_new_object('sgf_object')
-    
-    mod = obj.modifiers.new("SGF_geonodes", 'NODES')
-    # mod.node_group = bpy.data.node_groups['procedural_goban'].copy()
-    mod.node_group = bpy.data.node_groups['procedural_goban']
-
-
-    return obj
 
 
 
