@@ -1,13 +1,11 @@
 import bpy
 import bmesh
-from pathlib import Path
-import math
+
 import os
-import re
+import math
 
 from .sgfmill import sgf
 from .sgfmill import sgf_moves
-from .sgfmill import boards
 from .sgfmill import ascii_boards
 
 
