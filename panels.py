@@ -155,7 +155,7 @@ class SGF_PT_main_panel(bpy.types.Panel):
         col.prop(obj.sgf_settings, 'current_move', text='Move')
 
 class SGF_PT_board_settings(bpy.types.Panel):
-    bl_label = "Board Settings"
+    bl_label = "Board"
     bl_idname = "SGF_PT_board_settings"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
@@ -212,18 +212,6 @@ class SGF_PT_board_settings(bpy.types.Panel):
         col1.label(text='Hoshi')
         col2.prop(obj.sgf_settings, 'hoshi_radius', text='')
 
-        col1.separator()
-        col2.separator()
-
-        col1.label(text='Stones')
-        col2.prop(obj.sgf_settings, 'stone_radius', text='')
-
-        row = col2.row(align=True)
-        # row.prop(obj.sgf_settings, 'stone_display', text='Wire', toggle=True, invert_checkbox=True)
-        # row.prop(obj.sgf_settings, 'stone_display', text='Mesh', toggle=True)
-
-        row.prop(obj.sgf_settings, 'stone_display', text='')
-
         # box = layout.box()
         # col = box.column()
         # col.enabled = False
@@ -233,6 +221,44 @@ class SGF_PT_board_settings(bpy.types.Panel):
 
         # col.label(text='Line spacing X : %.2f mm'%spacing_x)
         # col.label(text='Line spacing Y : %.2f mm'%spacing_y)
+
+
+
+class SGF_PT_stones_settings(bpy.types.Panel):
+    bl_label = "Stones"
+    bl_idname = "SGF_PT_stones_settings"
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'UI'
+    bl_category = "SGF Importer"
+    bl_parent_id = "SGF_PT_main_panel"
+
+    @classmethod
+    def poll(self, context):
+        return bool(poll_draw_sgf_settings(context))
+
+    def draw(self, context):
+        layout = self.layout
+        scn = context.scene
+        
+        obj = context.object
+        modifier = funcs.get_sgf_modifier(context.object)
+
+        split = layout.split(factor=0.4)
+        col1 = split.column()
+        col1.alignment = 'RIGHT'
+        col2 = split.column()
+
+        col1.label(text='Type')
+        col2.prop(obj.sgf_settings, 'stone_display', text='')
+
+        col1.label(text='Quality')
+        row = col2.row()
+        row.prop(obj.sgf_settings, 'stone_quality', expand=True)
+
+        col1.label(text='Radius')
+        col2.prop(obj.sgf_settings, 'stone_radius', text='')
+
+        
 
 class SGF_PT_export_settings(bpy.types.Panel):
     bl_label = "Export"
@@ -329,6 +355,7 @@ class SGF_PT_export_settings(bpy.types.Panel):
 classes = [    
     SGF_PT_main_panel,
     SGF_PT_board_settings,
+    SGF_PT_stones_settings,
     SGF_PT_export_settings,
 ]
 

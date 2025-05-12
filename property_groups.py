@@ -91,9 +91,20 @@ class SGF_board_props(PropertyGroup):
                 ('3', 'Bi-convex', '', '', 3),
                 ('4', 'Yunzi', '', '', 4),
             ),
-        name='stone_display',
+        name='Stone Display',
         default='2', 
         update=lambda self, prop_name: funcs.update_geonode_value_from_property(self, 'stone_display')
+    )
+
+    stone_quality : EnumProperty( # type: ignore
+        items=(
+                ('0', 'Low', '', '', 0),
+                ('1', 'Mid', '', '', 1),
+                ('2', 'High', '', '', 2),
+            ),
+        name='Stone Resolution',
+        default='0', 
+        update=lambda self, prop_name: funcs.update_geonode_value_from_property(self, 'stone_quality')
     )
 
     show_edge : BoolProperty( # type: ignore
