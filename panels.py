@@ -219,8 +219,10 @@ class SGF_PT_board_settings(bpy.types.Panel):
         col2.prop(obj.sgf_settings, 'stone_radius', text='')
 
         row = col2.row(align=True)
-        row.prop(obj.sgf_settings, 'stone_display', text='Wire', toggle=True, invert_checkbox=True)
-        row.prop(obj.sgf_settings, 'stone_display', text='Mesh', toggle=True)
+        # row.prop(obj.sgf_settings, 'stone_display', text='Wire', toggle=True, invert_checkbox=True)
+        # row.prop(obj.sgf_settings, 'stone_display', text='Mesh', toggle=True)
+
+        row.prop(obj.sgf_settings, 'stone_display', text='')
 
         # box = layout.box()
         # col = box.column()

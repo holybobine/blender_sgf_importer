@@ -207,6 +207,10 @@ def update_geonode_value_from_property(self, prop_name):
 
     if gn_value_type == 'bool':
         value = bool(value)
+    elif gn_value_type == 'float':
+        value = float(value)
+    elif gn_value_type == 'int':
+        value = int(value)
 
     set_geonode_value_proper(modifier, prop_name, value)
 
@@ -597,7 +601,7 @@ def export_to_svg_ops(obj, svg_filepath):
     # set_geonode_value_proper(duplicate_modifier, 'show_hoshis', obj.sgf_settings.show_hoshis)
     # set_geonode_value_proper(duplicate_modifier, 'show_black_stones', obj.sgf_settings.show_black_stones)
     # set_geonode_value_proper(duplicate_modifier, 'show_white_stones', obj.sgf_settings.show_white_stones)
-    set_geonode_value_proper(duplicate_modifier, 'stone_display', False)
+    set_geonode_value_proper(duplicate_modifier, 'stone_display', 0)
     set_geonode_value_proper(duplicate_modifier, 'show_bounds_cross', True)
 
     # apply modifier

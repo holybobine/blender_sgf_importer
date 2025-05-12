@@ -84,9 +84,15 @@ class SGF_board_props(PropertyGroup):
         update=lambda self, prop_name: funcs.update_geonode_value_from_property(self, 'outer_edge_ratio')
     )
 
-    stone_display : BoolProperty( # type: ignore
+    stone_display : EnumProperty( # type: ignore
+        items=(
+                ('1', 'Thin', '', '', 1),
+                ('2', 'Ridge', '', '', 2),
+                ('3', 'Bi-convex', '', '', 3),
+                ('4', 'Yunzi', '', '', 4),
+            ),
         name='stone_display',
-        default=True, 
+        default='2', 
         update=lambda self, prop_name: funcs.update_geonode_value_from_property(self, 'stone_display')
     )
 
