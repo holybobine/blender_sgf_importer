@@ -5,6 +5,19 @@ from bpy.types import PropertyGroup
 
 from . import funcs
 
+
+def get_limited_value(self):
+    return self.get('current_move', 0)
+
+def set_limited_value(self, new_value):
+
+    if new_value > bpy.context.object.sgf_settings.move_max:
+        new_value = bpy.context.object.sgf_settings.move_max
+
+    self['current_move'] = new_value
+ 
+    
+
 class SGF_board_props(PropertyGroup):
 
     sgf_filepath : StringProperty() # type: ignore
@@ -16,8 +29,8 @@ class SGF_board_props(PropertyGroup):
         name='Target Move',
         default=0,
         soft_min=0,
-        get=lambda self: funcs.get_limited_value(self),
-        set=lambda self, value: funcs.set_limited_value(self, value),
+        get=lambda self: get_limited_value(self),
+        set=lambda self, value: set_limited_value(self, value),
         update=funcs.update_board_from_move, 
     )
 

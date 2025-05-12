@@ -11,6 +11,49 @@ from .sgfmill import boards
 from .sgfmill import ascii_boards
 
 
+
+
+# geonodes funcs
+def set_geonode_value_proper(modifier, input_name, value):
+    for i in modifier.node_group.interface.items_tree:
+        if i.name == input_name:
+
+            input_type = type(i.default_value).__name__
+            value_type = type(value).__name__
+
+            if input_type == value_type:
+                modifier[i.identifier] = value
+                i.default_value = i.default_value
+
+def get_geonode_value_proper(modifier, input_name):
+    for i in modifier.node_group.interface.items_tree:
+        if i.name == input_name:
+            return modifier[i.identifier]
+
+def reset_geonode_value(modifier, input_name):
+    for i in modifier.node_group.interface.items_tree:
+        if i.name == input_name:
+            modifier[i.identifier] = i.default_value
+            i.default_value = i.default_value
+
+def del_all_vertices_from_object(obj):
+        if obj.mode == 'OBJECT':
+            bm = bmesh.new()
+            bm.from_mesh(obj.data)
+        else:
+            bm = bmesh.from_edit_mesh(obj.data)
+
+        for vert in bm.verts:
+            bm.verts.remove(vert)
+
+        if obj.mode == 'OBJECT':
+            bm.to_mesh(obj.data)
+            bm.free()
+        else:
+            bmesh.update_edit_mesh(obj.data)
+
+
+# utils funcs
 def select_object_solo(obj):
 
     for o in bpy.context.scene.objects:
@@ -83,6 +126,103 @@ def append_from_blend_file(blendfile, section, target, forceImport=False):
 
         return result
 
+def del_all_vertices_in_obj(obj):
+    bpy.ops.object.mode_set(mode='EDIT')
+
+    me = obj.data
+    bm = bmesh.from_edit_mesh(me)    
+
+    verts = [v for v in bm.verts]
+    
+    bmesh.ops.delete(bm, geom=verts)
+    bmesh.update_edit_mesh(me)
+    
+    bpy.ops.object.mode_set(mode='OBJECT')
+
+def create_new_object(name='dummy', me=None):
+    if not me:
+        me = bpy.data.meshes.new(name)
+    obj = bpy.data.objects.new(name, me)
+    bpy.context.scene.collection.objects.link(obj)
+
+    return obj
+
+def update_all_viewports():
+    for area in bpy.context.window.screen.areas:
+        if area.type == 'VIEW_3D':
+            area.tag_redraw()
+
+def set_view_top():
+
+    area_type = 'VIEW_3D'
+    areas  = [area for area in bpy.context.window.screen.areas if area.type == area_type]
+
+    with bpy.context.temp_override(
+        window=bpy.context.window,
+        area=areas[0],
+        region=[region for region in areas[0].regions if region.type == 'WINDOW'][0],
+        screen=bpy.context.window.screen
+    ):
+        bpy.ops.view3d.view_axis(type='TOP')
+        bpy.ops.view3d.view_selected(use_all_regions=False)
+
+
+
+
+# maths funcs
+def get_bound_box_min_from_obj(obj):
+    min_x = min([corner[0] for corner in obj.bound_box])
+    min_y = min([corner[1] for corner in obj.bound_box])
+    min_z = min([corner[2] for corner in obj.bound_box])
+
+    return [min_x, min_y, min_z]
+
+def get_bound_box_max_from_obj(obj):
+    max_x = max([corner[0] for corner in obj.bound_box])
+    max_y = max([corner[1] for corner in obj.bound_box])
+    max_z = max([corner[2] for corner in obj.bound_box])
+
+    return [max_x, max_y, max_z]
+
+
+
+
+# UI funcs
+def alert(text = "", title = "Message Box", icon = 'INFO'):
+
+    print('- ALERT -', text)
+
+    def draw(self, context):
+        self.layout.label(text=text)
+
+    bpy.context.window_manager.popup_menu(draw, title = title, icon = icon)
+
+def update_geonode_value_from_property(self, prop_name):
+
+    obj = self.id_data
+    modifier = get_sgf_modifier(obj)
+    value = obj.sgf_settings[prop_name]
+
+    # convert property value to boolean if gn value is of boolean type
+    gn_value = get_geonode_value_proper(modifier, prop_name)
+    gn_value_type = type(gn_value).__name__
+
+    if gn_value_type == 'bool':
+        value = bool(value)
+
+    set_geonode_value_proper(modifier, prop_name, value)
+
+
+
+
+
+# SGF funcs
+def get_sgf_modifier(obj):
+    for m in obj.modifiers:
+        if m.type == 'NODES':
+            if m.node_group.name == 'procedural_goban':
+                return m
+
 def get_metadata_from_sgf_file(sgf_path, prefix, fail_value='unkown'):
 
     sgf_game = get_sgf_game_from_file(sgf_path)
@@ -99,95 +239,11 @@ def get_metadata_from_sgf_file(sgf_path, prefix, fail_value='unkown'):
     except Exception as e:
         return fail_value
 
-def set_geonode_value_proper(modifier, input_name, value):
-    for i in modifier.node_group.interface.items_tree:
-        if i.name == input_name:
-
-            input_type = type(i.default_value).__name__
-            value_type = type(value).__name__
-
-            if input_type == value_type:
-                modifier[i.identifier] = value
-                i.default_value = i.default_value
-
-def get_geonode_value_proper(modifier, input_name):
-    for i in modifier.node_group.interface.items_tree:
-        if i.name == input_name:
-            return modifier[i.identifier]
-
-def reset_geonode_value(modifier, input_name):
-    for i in modifier.node_group.interface.items_tree:
-        if i.name == input_name:
-            modifier[i.identifier] = i.default_value
-            i.default_value = i.default_value
-
-
-def del_all_vertices_from_object(obj):
-        if obj.mode == 'OBJECT':
-            bm = bmesh.new()
-            bm.from_mesh(obj.data)
-        else:
-            bm = bmesh.from_edit_mesh(obj.data)
-
-        for vert in bm.verts:
-            bm.verts.remove(vert)
-
-        if obj.mode == 'OBJECT':
-            bm.to_mesh(obj.data)
-            bm.free()
-        else:
-            bmesh.update_edit_mesh(obj.data)
-
-
-def totuple(a):
-    try:
-        return tuple(totuple(i) for i in a)
-    except TypeError:
-        return a
-
-def alert(text = "", title = "Message Box", icon = 'INFO'):
-
-    print('- ALERT -', text)
-
-    def draw(self, context):
-        self.layout.label(text=text)
-
-    bpy.context.window_manager.popup_menu(draw, title = title, icon = icon)
-
-def get_sgf_modifier(obj):
-    for m in obj.modifiers:
-        if m.type == 'NODES':
-            if m.node_group.name == 'procedural_goban':
-                return m
-
-def draw_prop_geonode(context, gn_modifier, input_name, label_name='', enabled=True, label=True, icon='NONE', toggle=-1, invert_checkbox=False):
-
-    # input_id = next(i.identifier for i in gn_modifier.node_group.inputs if i.name == input_name)                  # 3.6
-    input_id = next(i.identifier for i in gn_modifier.node_group.interface.items_tree if i.name == input_name)      # 4.0
-
-    # print(input_id)
-
-    if input_id:
-        row = context.row(align=True)
-        row.prop(
-            data = gn_modifier,
-            text = label_name if label_name != '' else input_name if label else '',
-            property = '["%s"]'%input_id,
-            icon = icon,
-            emboss = True,
-            toggle=toggle,
-            invert_checkbox=invert_checkbox,
-        )
-
-        row.enabled = enabled
-
-
-_description = """\
-Show the position from an SGF file. If a move number is specified, the position
-before that move is shown (this is to match the behaviour of GTP loadsgf).
-"""
-
 def get_ascii_board_from_sgf_file(sgf_path, move_number=None):
+    _description = """\
+    Show the position from an SGF file. If a move number is specified, the position
+    before that move is shown (this is to match the behaviour of GTP loadsgf).
+    """
     
     f = open(sgf_path, "rb")
     sgf_src = f.read()    
@@ -305,21 +361,6 @@ def display_ascii_board(layout, sgf_path, board_size):
 
     row_L.label(text='Board Preview')
     row_R.label(text=f'{board_size}x{board_size}')
-    
-
-
-def del_all_vertices_in_obj(obj):
-    bpy.ops.object.mode_set(mode='EDIT')
-
-    me = obj.data
-    bm = bmesh.from_edit_mesh(me)    
-
-    verts = [v for v in bm.verts]
-    
-    bmesh.ops.delete(bm, geom=verts)
-    bmesh.update_edit_mesh(me)
-    
-    bpy.ops.object.mode_set(mode='OBJECT')
 
 def set_vertices_from_board_array(obj, board_array):
 
@@ -356,7 +397,6 @@ def set_vertices_from_board_array(obj, board_array):
     for i, color_value in enumerate(color_array):
         stone_color.add([i], color_value, 'ADD' )
 
-
 def read_src_from_sgf_file(sgf_path):
     f = open(sgf_path, "rb")
     sgf_src = f.read()    
@@ -369,7 +409,6 @@ def get_sgf_game_from_file(sgf_path):
     sgf_game = sgf.Sgf_game.from_bytes(sgf_src)
 
     return sgf_game
-
 
 def get_last_move_from_sgf_file(sgf_path):
     sgf_game = get_sgf_game_from_file(sgf_path)
@@ -409,41 +448,6 @@ def load_board_from_sgf_file(obj, sgf_path, move_number=None):
     obj.sgf_settings.is_valid_sgf_file = True
     obj.sgf_settings.is_sgf_object = True
 
-
-
-def update_board_from_move(self, context):
-
-    obj = context.object
-    modifier = get_sgf_modifier(obj)
-
-    sgf_filepath = modifier["Socket_11"]
-    current_move = obj.sgf_settings.current_move
-
-    ascii_board = get_ascii_board_from_sgf_file(sgf_filepath, current_move)
-    board_array = [char for char in ascii_board if char in ['.', 'o', '#']]
-
-    if current_move <= 0:
-        del_all_vertices_from_object(obj)
-        return
-
-
-    set_vertices_from_board_array(obj, board_array)
-
-
-
-
-
-def get_limited_value(self):
-    return self.get('current_move', 0)
-
-def set_limited_value(self, new_value):
-
-    if new_value > bpy.context.object.sgf_settings.move_max:
-        new_value = bpy.context.object.sgf_settings.move_max
-
-    self['current_move'] = new_value
- 
-    
 def load_game_metadata(obj, sgf_path):
 
     # set geonodes values
@@ -484,38 +488,23 @@ def load_game_metadata(obj, sgf_path):
     # sgf_src = read_src_from_sgf_file(sgf_path)
     # print(sgf_src)
 
-    
+def update_board_from_move(self, context):
 
-
-def update_geonode_value_from_property(self, prop_name):
-
-    obj = self.id_data
+    obj = context.object
     modifier = get_sgf_modifier(obj)
-    value = obj.sgf_settings[prop_name]
 
-    # convert property value to boolean if gn value is of boolean type
-    gn_value = get_geonode_value_proper(modifier, prop_name)
-    gn_value_type = type(gn_value).__name__
+    sgf_filepath = modifier["Socket_11"]
+    current_move = obj.sgf_settings.current_move
 
-    if gn_value_type == 'bool':
-        value = bool(value)
+    ascii_board = get_ascii_board_from_sgf_file(sgf_filepath, current_move)
+    board_array = [char for char in ascii_board if char in ['.', 'o', '#']]
 
-    set_geonode_value_proper(modifier, prop_name, value)
+    if current_move <= 0:
+        del_all_vertices_from_object(obj)
+        return
 
 
-def create_new_object(name='dummy', me=None):
-    if not me:
-        me = bpy.data.meshes.new(name)
-    obj = bpy.data.objects.new(name, me)
-    bpy.context.scene.collection.objects.link(obj)
-
-    return obj
-
-def duplicate_object(obj):
-    dupe = bpy.data.objects.new(obj.name, obj.data)
-    bpy.context.scene.collection.objects.link(dupe)
-
-    return dupe
+    set_vertices_from_board_array(obj, board_array)
 
 def add_new_sgf_object(self, context):
     scn = context.scene
@@ -532,20 +521,10 @@ def add_new_sgf_object(self, context):
 
     return obj
 
-def duplicate_gn_modifier_on_target_object(gn_mod, target_obj):
 
-    name = gn_mod.name
-    node_tree_name = gn_mod.node_group.name
 
-    target_mod = target_obj.modifiers.new(name, 'NODES')
-    target_mod.node_group = bpy.data.node_groups[node_tree_name]
 
-    for i in gn_mod.node_group.interface.items_tree:
-            if type(i).__name__ != 'NodeTreeInterfaceSocketGeometry':
-                target_mod[i.identifier] = gn_mod[i.identifier]
-
-    return target_mod
-
+# Export to SVG funcs
 def get_svg_filepath_for_multiple_export():
 
     modifier = get_sgf_modifier(bpy.context.object)
@@ -587,58 +566,6 @@ def get_svg_filepath_for_single_export_from_modifier(modifier, user_filepath=Non
     svg_filepath = os.path.join(scn_filepath, basename + '.svg')
 
     return svg_filepath
-
-def update_all_viewports():
-    for area in bpy.context.window.screen.areas:
-        if area.type == 'VIEW_3D':
-            area.tag_redraw()
-
-
-
-
-def get_bound_box_min_from_obj(obj):
-
-    min_x = min([corner[0] for corner in obj.bound_box])
-    min_y = min([corner[1] for corner in obj.bound_box])
-    min_z = min([corner[2] for corner in obj.bound_box])
-
-    return [min_x, min_y, min_z]
-
-def get_bound_box_max_from_obj(obj):
-    max_x = max([corner[0] for corner in obj.bound_box])
-    max_y = max([corner[1] for corner in obj.bound_box])
-    max_z = max([corner[2] for corner in obj.bound_box])
-
-    return [max_x, max_y, max_z]
-
-
-def create_export_cam_above_object(obj):
-    dim_x = obj.dimensions[0]
-    dim_y = obj.dimensions[1]
-
-    min_x = get_bound_box_min_from_obj(obj)[0]
-    min_y = get_bound_box_min_from_obj(obj)[1]
-
-    cam_x = min_x + (dim_x/2)
-    cam_y = min_y + (dim_y/2)
-    cam_z = max(dim_x, dim_y)
-
-    camera_data = bpy.data.cameras.new(name='Camera')
-    camera_object = bpy.data.objects.new('Camera', camera_data)
-    bpy.context.scene.collection.objects.link(camera_object)
-
-
-
-    
-
-    camera_object.location = (cam_x, cam_y, cam_z)
-
-    # camera_data.type = 'ORTHO'
-    # camera_data.ortho_scale = cam_z
-
-    return camera_object
-
-
 
 def export_to_svg_ops(obj, svg_filepath):
     
@@ -686,23 +613,6 @@ def export_to_svg_ops(obj, svg_filepath):
     bpy.ops.object.delete()
     select_object_solo(obj)
 
-
-
-def set_view_top():
-
-    area_type = 'VIEW_3D'
-    areas  = [area for area in bpy.context.window.screen.areas if area.type == area_type]
-
-    with bpy.context.temp_override(
-        window=bpy.context.window,
-        area=areas[0],
-        region=[region for region in areas[0].regions if region.type == 'WINDOW'][0],
-        screen=bpy.context.window.screen
-    ):
-        bpy.ops.view3d.view_axis(type='TOP')
-        bpy.ops.view3d.view_selected(use_all_regions=False)
-
-
 def set_line_thickness_on_gp_object(gp_obj, thickness):
     for gpl in gp_obj.data.layers:
         gpf = gpl.active_frame
@@ -715,3 +625,29 @@ def set_line_thickness_on_gp_object(gp_obj, thickness):
                 # Adjust thickness of this point,
                 # by setting the pressure to the default 1.0.
                 p.pressure = thickness
+
+def create_export_cam_above_object(obj):
+    dim_x = obj.dimensions[0]
+    dim_y = obj.dimensions[1]
+
+    min_x = get_bound_box_min_from_obj(obj)[0]
+    min_y = get_bound_box_min_from_obj(obj)[1]
+
+    cam_x = min_x + (dim_x/2)
+    cam_y = min_y + (dim_y/2)
+    cam_z = max(dim_x, dim_y)
+
+    camera_data = bpy.data.cameras.new(name='Camera')
+    camera_object = bpy.data.objects.new('Camera', camera_data)
+    bpy.context.scene.collection.objects.link(camera_object)
+
+    camera_object.location = (cam_x, cam_y, cam_z)
+
+    # camera_data.type = 'ORTHO'
+    # camera_data.ortho_scale = cam_z
+
+    return camera_object
+
+
+
+

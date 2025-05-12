@@ -3,6 +3,36 @@ import os
 
 from . import funcs
 
+def draw_prop_geonode(context, gn_modifier, input_name, label_name='', enabled=True, label=True, icon='NONE', toggle=-1, invert_checkbox=False):
+
+    # input_id = next(i.identifier for i in gn_modifier.node_group.inputs if i.name == input_name)                  # 3.6
+    input_id = next(i.identifier for i in gn_modifier.node_group.interface.items_tree if i.name == input_name)      # 4.0
+
+    # print(input_id)
+
+    if input_id:
+        row = context.row(align=True)
+        row.prop(
+            data = gn_modifier,
+            text = label_name if label_name != '' else input_name if label else '',
+            property = '["%s"]'%input_id,
+            icon = icon,
+            emboss = True,
+            toggle=toggle,
+            invert_checkbox=invert_checkbox,
+        )
+
+        row.enabled = enabled
+
+def alert(text = "", title = "Message Box", icon = 'INFO'):
+
+    print('- ALERT -', text)
+
+    def draw(self, context):
+        self.layout.label(text=text)
+
+    bpy.context.window_manager.popup_menu(draw, title = title, icon = icon)
+
 
 
 def poll_draw_sgf_panel(context):
@@ -155,11 +185,11 @@ class SGF_PT_board_settings(bpy.types.Panel):
 
         col1.label(text='Board Name')
         row = col2.row(align=True)
-        funcs.draw_prop_geonode(row, modifier, 'show_board_name', label=False)
+        draw_prop_geonode(row, modifier, 'show_board_name', label=False)
 
         rrow = row.row()
         rrow.enabled = funcs.get_geonode_value_proper(modifier, 'show_board_name')
-        funcs.draw_prop_geonode(rrow, modifier, 'board_name', label=False) 
+        draw_prop_geonode(rrow, modifier, 'board_name', label=False) 
 
         col1.separator()
         col2.separator()
