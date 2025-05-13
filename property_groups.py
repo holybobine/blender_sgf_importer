@@ -168,10 +168,6 @@ class SGF_board_props(PropertyGroup):
 
 class SGF_scene_settings(PropertyGroup):
 
-    addon_path = os.path.dirname(__file__)
-
-    assetFilePath : StringProperty(default=os.path.join(addon_path, 'blend_assets', 'sgf_importer_assets_b4.2.blend')) # type: ignore
-
     last_used_filepath : StringProperty() # type: ignore
 
 

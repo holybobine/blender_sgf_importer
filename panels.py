@@ -5,8 +5,8 @@ from . import funcs
 
 def draw_prop_geonode(context, gn_modifier, input_name, label_name='', enabled=True, label=True, icon='NONE', toggle=-1, invert_checkbox=False):
 
-    # input_id = next(i.identifier for i in gn_modifier.node_group.inputs if i.name == input_name)                  # 3.6
-    input_id = next(i.identifier for i in gn_modifier.node_group.interface.items_tree if i.name == input_name)      # 4.0
+    inputs = funcs.get_geonode_inputs_from_modifier(gn_modifier)
+    input_id = next(i.identifier for i in inputs if i.name == input_name)
 
     # print(input_id)
 

@@ -9,11 +9,17 @@ from .sgfmill import sgf_moves
 from .sgfmill import ascii_boards
 
 
+def get_geonode_inputs_from_modifier(modifier):
+    if bpy.app.version < (4, 0, 0):
+        inputs = modifier.node_group.inputs
+    elif bpy.app.version >= (4, 0, 0):
+        inputs = modifier.node_group.interface.items_tree
 
+    return inputs
 
 # geonodes funcs
 def set_geonode_value_proper(modifier, input_name, value):
-    for i in modifier.node_group.interface.items_tree:
+    for i in get_geonode_inputs_from_modifier(modifier):
         if i.name == input_name:
 
             input_type = type(i.default_value).__name__
@@ -24,12 +30,12 @@ def set_geonode_value_proper(modifier, input_name, value):
                 i.default_value = i.default_value
 
 def get_geonode_value_proper(modifier, input_name):
-    for i in modifier.node_group.interface.items_tree:
+    for i in get_geonode_inputs_from_modifier(modifier):
         if i.name == input_name:
             return modifier[i.identifier]
 
 def reset_geonode_value(modifier, input_name):
-    for i in modifier.node_group.interface.items_tree:
+    for i in get_geonode_inputs_from_modifier(modifier):
         if i.name == input_name:
             modifier[i.identifier] = i.default_value
             i.default_value = i.default_value
@@ -271,7 +277,7 @@ def display_ascii_board(layout, sgf_path, board_size):
             elif char == '#':
                 row.label(text='', icon='HOLDOUT_OFF')
             elif char == 'o':
-                row.label(text='', icon='RECORD_ON')
+                row.label(text='', icon='RADIOBUT_ON')
 
 
     row = box.row()
@@ -291,10 +297,13 @@ def display_ascii_board(layout, sgf_path, board_size):
 # SGF funcs
 
 def add_new_sgf_object(self, context):
-    scn = context.scene
-    assetFile = scn.sgf_settings.assetFilePath
+    
+    addon_path = os.path.dirname(__file__)
+    # asset_filename = 'sgf_importer_assets_b4.2.blend'
+    asset_filename = 'sgf_importer_assets_b3.2.0.blend'
+    asset_filePath = os.path.join(addon_path, 'blend_assets', asset_filename)
 
-    append_from_blend_file(assetFile, 'NodeTree', 'procedural_goban', forceImport=False)
+    append_from_blend_file(asset_filePath, 'NodeTree', 'procedural_goban', forceImport=False)
 
     obj = create_new_object('sgf_object')
     
