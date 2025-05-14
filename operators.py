@@ -45,11 +45,9 @@ class SGF_OT_import_sgf_file(bpy.types.Operator, ImportHelper):
         layout = self.layout
         scn = context.scene
 
-        
         # retrieve game data
         player_black = funcs.get_metadata_from_sgf_file(self.filepath, 'PB')
         player_white = funcs.get_metadata_from_sgf_file(self.filepath, 'PW')
-        
         player_black_rank = funcs.get_metadata_from_sgf_file(self.filepath, 'BR', fail_value='?')
         player_white_rank = funcs.get_metadata_from_sgf_file(self.filepath, 'WR', fail_value='?')
 
@@ -59,10 +57,6 @@ class SGF_OT_import_sgf_file(bpy.types.Operator, ImportHelper):
         game_komi = funcs.get_metadata_from_sgf_file(self.filepath, 'KM')
         game_handicap = funcs.get_metadata_from_sgf_file(self.filepath, 'HA', fail_value='None')
         game_date = funcs.get_metadata_from_sgf_file(self.filepath, 'DT')
-
-
-        
-
 
         # players
         box = layout.box()
@@ -100,21 +94,10 @@ class SGF_OT_import_sgf_file(bpy.types.Operator, ImportHelper):
         # ascii board
         funcs.display_ascii_board(layout, self.filepath, board_size)
 
-       
-
     def execute(self, context):
         print('-INF- import new .sgf file')
-
-        file_extension = os.path.splitext(self.filepath)[1]
-
-        if file_extension != '.sgf':
-            funcs.alert(
-                    text='No .sgf file detected',
-                    title='ERROR',
-                    icon='ERROR'
-                )
-            
-            return
+        
+        print(self.filepath)
 
         if self.action == 'NEW':
             obj = funcs.add_new_sgf_object(self, context)
@@ -122,6 +105,8 @@ class SGF_OT_import_sgf_file(bpy.types.Operator, ImportHelper):
             obj = bpy.context.active_object
 
         funcs.select_object_solo(obj)
+        bpy.ops.object.mode_set(mode = 'EDIT')
+        bpy.ops.object.mode_set(mode = 'OBJECT')
         funcs.del_all_vertices_in_obj(obj)
         funcs.load_board_from_sgf_file(obj, self.filepath)
         
@@ -164,13 +149,12 @@ class SGF_OT_bouton(bpy.types.Operator):
     def execute(self, context):
         print('BOUTON')
 
-        # funcs.set_view_top()
+        # obj = context.object
+        # modifier = funcs.get_sgf_modifier(obj)
 
-        sgf_path = context.object.sgf_settings.sgf_filepath
-        board_size = 19
+        # funcs.set_geonode_value_proper(modifier, 'board_name', 'JOOOHN')
 
-        ascii_board = funcs.get_ascii_board_from_sgf_file(sgf_path)
-        funcs.display_ascii_board(ascii_board, board_size)
+        print()
 
         return {'FINISHED'} 
 

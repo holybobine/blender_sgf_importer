@@ -21,13 +21,13 @@ def get_geonode_inputs_from_modifier(modifier):
 def set_geonode_value_proper(modifier, input_name, value):
     for i in get_geonode_inputs_from_modifier(modifier):
         if i.name == input_name:
-
             input_type = type(i.default_value).__name__
             value_type = type(value).__name__
 
             if input_type == value_type:
                 modifier[i.identifier] = value
-                i.default_value = i.default_value
+            #     i.default_value = i.default_value     # crash in 4.4
+
 
 def get_geonode_value_proper(modifier, input_name):
     for i in get_geonode_inputs_from_modifier(modifier):
@@ -38,7 +38,7 @@ def reset_geonode_value(modifier, input_name):
     for i in get_geonode_inputs_from_modifier(modifier):
         if i.name == input_name:
             modifier[i.identifier] = i.default_value
-            i.default_value = i.default_value
+            # i.default_value = i.default_value     # crash in 4.4
 
 def del_all_vertices_from_object(obj):
         if obj.mode == 'OBJECT':
@@ -66,69 +66,24 @@ def select_object_solo(obj):
     obj.select_set(True)
     bpy.context.view_layer.objects.active = obj
 
-def append_from_blend_file(blendfile, section, target, forceImport=False):
+def append_node_group_from_blend_file(blend_filepath, target, forceImport=False):
+    
+    # test if target node group already exists in scene
+    if bpy.data.node_groups.get(target) and not forceImport:
+        return
+    
+    # import using bpy.data.libraries.load()
+    # doc link : https://docs.blender.org/api/current/bpy.types.BlendDataLibraries.html#bpy.types.BlendDataLibraries.load
+    try:
+        with bpy.data.libraries.load(blend_filepath, link=False) as (data_from, data_to):
+            data_to.node_groups = [target]
 
-    obj_selection = bpy.context.selected_objects
-    obj_active = bpy.context.object
+        return data_to.node_groups[0]
+    
+    except Exception as e:
+        print(e)
+        return
 
-    doAppend = True
-    result = True
-
-    dataSet = ''
-
-    #choose correct data set from section name
-    if section == 'Object':
-        dataSet = bpy.data.objects
-    elif section == 'Material':
-        dataSet = bpy.data.materials
-    elif section == 'NodeTree':
-        dataSet = bpy.data.node_groups
-
-    alreadyExist = dataSet.get(target)
-
-    if alreadyExist and not forceImport:
-        # print('-INF- '+section+' "'+target+'" already in scene, skipping import.')
-        pass
-    else:
-        #append command, with added backslashes to fit python filepath formating
-
-        new_datablock = None
-
-        old_set = set(dataSet[:])
-
-        result = bpy.ops.wm.append(
-                                    filepath=blendfile + "\\"+section+"\\" + target,
-                                    directory=blendfile + "\\"+section+"\\",
-                                    filename=target
-                                )
-
-        new_set = set(dataSet[:]) - old_set
-
-        new_datablock = list(new_set)[0]
-
-        if new_datablock == None:
-            print('-ERR- Failed importing '+section+' "'+target+'" from "'+blendfile+'"')
-            result = False
-        else:
-            # print(f'-INF- successfully imported {new_datablock}')
-            result = new_datablock
-
-        # bpy.ops.object.select_all(action='DESELECT')
-
-        for o in bpy.data.objects:
-            o.select_set(False)
-
-        for o in obj_selection:
-            o.select_set(True)
-
-        bpy.context.view_layer.objects.active = obj_active
-
-        for lib in bpy.data.libraries:
-            if lib.name == os.path.basename(blendfile):
-                # print(f'-INF- removing lib {lib}')
-                bpy.data.batch_remove(ids=(lib,))
-
-        return result
 
 def del_all_vertices_in_obj(obj):
     bpy.ops.object.mode_set(mode='EDIT')
@@ -192,14 +147,14 @@ def get_bound_box_max_from_obj(obj):
 
 
 # UI funcs
-def alert(text = "", title = "Message Box", icon = 'INFO'):
+# def alert(text = "", title = "Message Box", icon = 'INFO'):
 
-    print('- ALERT -', text)
+#     print('- ALERT -', text)
 
-    def draw(self, context):
-        self.layout.label(text=text)
+#     def draw(self, context):
+#         self.layout.label(text=text)
 
-    bpy.context.window_manager.popup_menu(draw, title = title, icon = icon)
+#     bpy.context.window_manager.popup_menu(draw, title = title, icon = icon)
 
 def update_geonode_value_from_property(self, prop_name):
 
@@ -299,18 +254,15 @@ def display_ascii_board(layout, sgf_path, board_size):
 def add_new_sgf_object(self, context):
     
     addon_path = os.path.dirname(__file__)
-    # asset_filename = 'sgf_importer_assets_b4.2.blend'
     asset_filename = 'sgf_importer_assets_b3.2.0.blend'
     asset_filePath = os.path.join(addon_path, 'blend_assets', asset_filename)
 
-    append_from_blend_file(asset_filePath, 'NodeTree', 'procedural_goban', forceImport=False)
+    append_node_group_from_blend_file(asset_filePath, 'procedural_goban')
 
     obj = create_new_object('sgf_object')
     
     mod = obj.modifiers.new("SGF_geonodes", 'NODES')
-    # mod.node_group = bpy.data.node_groups['procedural_goban'].copy()
     mod.node_group = bpy.data.node_groups['procedural_goban']
-
 
     return obj
 
@@ -357,20 +309,18 @@ def load_game_metadata(obj, sgf_path):
 
     # set geonodes values
     modifier = get_sgf_modifier(obj)
+    
+
     set_geonode_value_proper(modifier, 'sgf_filepath', sgf_path)
     set_geonode_value_proper(modifier, 'board_name', os.path.basename(sgf_path))
-
-    
 
     # set custom properties values
     obj.sgf_settings.sgf_filepath = sgf_path
     obj.sgf_settings.current_move = get_last_move_from_sgf_file(sgf_path)
     obj.sgf_settings.move_max = get_last_move_from_sgf_file(sgf_path)
-
-    # get values from sgf_src
-
     
 
+    # get values from sgf_src
     obj.sgf_settings.PB = get_metadata_from_sgf_file(sgf_path, 'PB')
     obj.sgf_settings.PW = get_metadata_from_sgf_file(sgf_path, 'PW')
     obj.sgf_settings.PB_rank = get_metadata_from_sgf_file(sgf_path, 'BR', fail_value='?')
@@ -501,10 +451,11 @@ def load_board_from_sgf_file(obj, sgf_path, move_number=None):
         obj.sgf_settings.is_valid_sgf_file = False
         
         return
-    
+
     # generate board mesh
     board_array = [char for char in ascii_board if char in ['.', 'o', '#']]
     set_vertices_from_board_array(obj, board_array)
+    
 
     # load game metadata
     load_game_metadata(obj, sgf_path)
