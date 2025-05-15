@@ -27,6 +27,7 @@ from bpy.props import *
 from sys import path
 
 from . import property_groups
+from . import previews
 from . import operators
 from . import panels
 from . import funcs
@@ -36,6 +37,7 @@ from . import funcs
 def register():
 
     property_groups.register()
+    previews.register()
     operators.register()
     panels.register()
 

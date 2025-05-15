@@ -8,6 +8,8 @@ from .sgfmill import sgf
 from .sgfmill import sgf_moves
 from .sgfmill import ascii_boards
 
+from .previews import preview_collections
+
 
 def get_geonode_inputs_from_modifier(modifier):
     if bpy.app.version < (4, 0, 0):
@@ -218,8 +220,14 @@ def display_ascii_board(layout, sgf_path, board_size):
     box = layout.box()
     
     col = box.column(align=True)
+    col.scale_x = 1
     col.scale_x = 0.55
     col.scale_y = 0.6
+
+    grid_icon = preview_collections['sgf_icons']['grid_dot.png'].icon_id
+    black_icon = preview_collections['sgf_icons']['stone_black.png'].icon_id
+    white_icon = preview_collections['sgf_icons']['stone_white.png'].icon_id
+    
 
     for line in lines_array:
         row = col.row(align=True)
@@ -228,11 +236,11 @@ def display_ascii_board(layout, sgf_path, board_size):
             if char == '-':
                 row.label(text='', icon='BLANK1')
             if char == '.':
-                row.label(text='', icon='DOT')
+                row.label(text='', icon_value=grid_icon)
             elif char == '#':
-                row.label(text='', icon='HOLDOUT_OFF')
+                row.label(text='', icon_value=black_icon)
             elif char == 'o':
-                row.label(text='', icon='RADIOBUT_ON')
+                row.label(text='', icon_value=white_icon)
 
 
     row = box.row()
