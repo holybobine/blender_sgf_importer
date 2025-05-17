@@ -538,7 +538,109 @@ def get_svg_filepath_for_single_export_from_modifier(modifier, user_filepath=Non
 
     return svg_filepath
 
-def export_to_svg_ops(obj, svg_filepath):
+def solo_layer_on_sgf_object(obj, sgf_layers, target_layer):
+
+    modifier = get_sgf_modifier(obj)
+
+    for layer in sgf_layers:
+        set_geonode_value(
+            modifier=modifier, 
+            input_name=layer[0], 
+            value=True if layer[0] == target_layer[0] else False
+        )
+
+def export_multiple_to_svg(obj, svg_filepath):
+    scn = bpy.context.scene
+    modifier = get_sgf_modifier(obj)
+
+    sgf_layers = [
+            ['show_edge',  scn.sgf_settings.export_edge],
+            ['show_grid_x', scn.sgf_settings.export_grid_x],
+            ['show_grid_y', scn.sgf_settings.export_grid_y],
+            ['show_hoshis', scn.sgf_settings.export_hoshis],
+            ['show_black_stones', scn.sgf_settings.export_black_stones],
+            ['show_white_stones', scn.sgf_settings.export_white_stones],
+        ]
+
+    for layer in sgf_layers:
+        if layer[1] == True:
+
+            print(f'exporting layer {layer[0]}')
+
+            solo_layer_on_sgf_object(obj, sgf_layers, layer)
+            svg_filepath = get_svg_filepath_for_single_export_from_modifier(modifier, user_filepath=svg_filepath)
+            
+            export_to_svg(obj, svg_filepath)
+
+    for layer in sgf_layers:
+        print(layer[1])
+
+        set_geonode_value(
+            modifier=modifier, 
+            input_name=layer[0], 
+            value=layer[1]
+        )
+
+    # toggle editmode to force GN update
+    bpy.ops.object.mode_set(mode='EDIT')
+    bpy.ops.object.mode_set(mode='OBJECT')
+
+def export_to_svg(obj, filepath):
+
+    # store values to be restored
+
+    resolution_x = bpy.data.scenes["Scene"].render.resolution_x
+    resolution_y = bpy.data.scenes["Scene"].render.resolution_y
+
+    areas_view_modes = []
+    for area in bpy.context.screen.areas:
+        if area.type == 'VIEW_3D':
+            areas_view_modes.append([
+                area,
+                area.spaces[0].region_3d.view_perspective,
+                area.spaces[0].use_local_camera,
+                area.spaces[0].camera,
+            ])
+
+
+    # setup camera view
+
+    export_cam = create_export_cam_above_object(obj)
+
+    bpy.data.scenes["Scene"].render.resolution_x = 1080
+    bpy.data.scenes["Scene"].render.resolution_y = 1080
+
+    for area in bpy.context.screen.areas:
+        if area.type == 'VIEW_3D':
+            area.spaces[0].region_3d.view_perspective = 'CAMERA'
+            area.spaces[0].use_local_camera = True
+            area.spaces[0].camera = export_cam
+
+
+    export_single_object_to_svg(obj, filepath)
+
+    # restore all to previous state
+
+    bpy.data.scenes["Scene"].render.resolution_x = resolution_x
+    bpy.data.scenes["Scene"].render.resolution_y = resolution_y
+
+    for area in areas_view_modes:
+        area_object = area[0]
+
+        area_object.spaces[0].region_3d.view_perspective = 'PERSP'
+        # area_object.spaces[0].region_3d.view_perspective = area[1]
+        area_object.spaces[0].use_local_camera = area[2]
+        area_object.spaces[0].camera = area[3]
+
+    select_object_solo(export_cam)
+    bpy.ops.object.delete()
+
+    select_object_solo(obj)
+
+    bpy.context.scene.sgf_settings.last_used_filepath = os.path.dirname(filepath)
+
+
+def export_single_object_to_svg(obj, svg_filepath):
     
     # select object solo and duplicate
     select_object_solo(obj)
@@ -555,13 +657,8 @@ def export_to_svg_ops(obj, svg_filepath):
     scn = bpy.context.scene
     duplicate_modifier = get_sgf_modifier(bpy.context.object)
 
-    # set_geonode_value(duplicate_modifier, 'show_edge', obj.sgf_settings.show_edge)
-    # set_geonode_value(duplicate_modifier, 'show_grid_x', obj.sgf_settings.show_grid_x)
-    # set_geonode_value(duplicate_modifier, 'show_grid_y', obj.sgf_settings.show_grid_y)
-    # set_geonode_value(duplicate_modifier, 'show_hoshis', obj.sgf_settings.show_hoshis)
-    # set_geonode_value(duplicate_modifier, 'show_black_stones', obj.sgf_settings.show_black_stones)
-    # set_geonode_value(duplicate_modifier, 'show_white_stones', obj.sgf_settings.show_white_stones)
     set_geonode_value(duplicate_modifier, 'stone_display', 0)
+    set_geonode_value(duplicate_modifier, 'show_board_name', False)
     set_geonode_value(duplicate_modifier, 'show_bounds_cross', True)
 
     # apply modifier
@@ -573,9 +670,6 @@ def export_to_svg_ops(obj, svg_filepath):
     bpy.ops.object.convert(target='GPENCIL')
 
     set_line_thickness_on_gp_object(bpy.context.object, 0.05)
-
-    # bpy.ops.object.mode_set(mode = 'EDIT_GPENCIL')
-    # bpy.ops.object.mode_set(mode = 'OBJECT')
 
     # export to svg
     bpy.ops.wm.gpencil_export_svg(filepath=svg_filepath)

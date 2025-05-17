@@ -154,6 +154,12 @@ class SGF_PT_main_panel(bpy.types.Panel):
 
         col.prop(obj.sgf_settings, 'current_move', text='Move')
 
+        row = layout.row()
+
+        svg_filepath = funcs.get_svg_filepath_for_multiple_export()
+        op = row.operator(operator='sgf.export_board_to_svg', text='Export to SVG', icon='EXPORT')
+        op.filepath = svg_filepath
+
 class SGF_PT_board_settings(bpy.types.Panel):
     bl_label = "Board"
     bl_idname = "SGF_PT_board_settings"
@@ -185,11 +191,13 @@ class SGF_PT_board_settings(bpy.types.Panel):
 
         col1.label(text='Board Name')
         row = col2.row(align=True)
-        draw_prop_geonode(row, modifier, 'show_board_name', label=False)
+        # draw_prop_geonode(row, modifier, 'show_board_name', label=False)
+        row.prop(obj.sgf_settings, 'show_board_name', text='')   
 
         rrow = row.row()
-        rrow.enabled = funcs.get_geonode_value(modifier, 'show_board_name')
-        draw_prop_geonode(rrow, modifier, 'board_name', label=False) 
+        # rrow.enabled = funcs.get_geonode_value(modifier, 'show_board_name')
+        rrow.enabled = obj.sgf_settings.show_board_name
+        draw_prop_geonode(rrow, modifier, 'board_name', label=False)
 
         col1.separator()
         col2.separator()
@@ -258,105 +266,11 @@ class SGF_PT_stones_settings(bpy.types.Panel):
         col1.label(text='Radius')
         col2.prop(obj.sgf_settings, 'stone_radius', text='')
 
-        
-
-class SGF_PT_export_settings(bpy.types.Panel):
-    bl_label = "Export"
-    bl_idname = "SGF_PT_export_settings"
-    bl_space_type = 'VIEW_3D'
-    bl_region_type = 'UI'
-    bl_category = "SGF Importer"
-    bl_parent_id = "SGF_PT_main_panel"
-
-    @classmethod
-    def poll(self, context):
-        return bool(poll_draw_sgf_settings(context))
-
-    def draw(self, context):
-
-        layout = self.layout
-        scn = context.scene
-        
-
-        obj = context.object
-        modifier = funcs.get_sgf_modifier(context.object)
-
-
-        split = layout.split(factor=0.4)
-        col1 = split.column()
-        col1.alignment = 'RIGHT'
-        col2 = split.column()
-
-        
-
-        col1.label(text='Export Method')
-        row = col2.row(align=True)
-        row.prop(obj.sgf_settings, 'export_method', text='')
-
-        col1.separator()
-        col2.separator()
-
-        col1.label(text='Board')
-        col1.label(text='')
-        col1.label(text='')
-        col1.label(text='')
-        col2.prop(obj.sgf_settings, 'show_edge')
-        col2.prop(obj.sgf_settings, 'show_grid_x')
-        col2.prop(obj.sgf_settings, 'show_grid_y')
-        col2.prop(obj.sgf_settings, 'show_hoshis')
-
-        col1.separator()
-        col2.separator()
-
-        col1.label(text='Stones')
-        col1.label(text='')
-        col2.prop(obj.sgf_settings, 'show_black_stones')
-        col2.prop(obj.sgf_settings, 'show_white_stones')
-
-        nb_files = sum([
-            obj.sgf_settings.show_edge,
-            obj.sgf_settings.show_grid_x,
-            obj.sgf_settings.show_grid_y,
-            obj.sgf_settings.show_hoshis,
-            obj.sgf_settings.show_black_stones,
-            obj.sgf_settings.show_white_stones,
-        ])
-
-        row = layout.row()
-
-        if nb_files == 0:
-            row.alert=True
-            row.enabled = False
-            op_name = 'sgf.export_to_svg'
-            op_text='Nothing to export'
-            op_icon = 'ERROR'
-            svg_filepath = ''
-            
-
-        elif obj.sgf_settings.export_method == 'single':
-            op_name = 'sgf.export_to_svg'
-            op_text='Export to .svg'
-            op_icon = 'EXPORT'
-            svg_filepath = funcs.get_svg_filepath_for_single_export_from_modifier(modifier)
-
-        elif obj.sgf_settings.export_method == 'multiple':
-            op_name = 'sgf.export_to_svg_multiple'
-            # op_name = 'sgf.bouton'
-            op_text=f'Export {nb_files} .svg files'
-            op_icon = 'EXPORT'
-            svg_filepath = funcs.get_svg_filepath_for_multiple_export()
-
-
-
-        op = row.operator(operator=op_name, text=op_text, icon=op_icon)
-        op.filepath = svg_filepath
-
 
 classes = [    
     SGF_PT_main_panel,
     SGF_PT_board_settings,
     SGF_PT_stones_settings,
-    SGF_PT_export_settings,
 ]
 
 
