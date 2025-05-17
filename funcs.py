@@ -11,36 +11,39 @@ from .sgfmill import ascii_boards
 from .previews import preview_collections
 
 
-def get_geonode_inputs_from_modifier(modifier):
+# geonodes funcs
+def get_geonode_input_from_modifier(modifier, input_name):
     if bpy.app.version < (4, 0, 0):
         inputs = modifier.node_group.inputs
     elif bpy.app.version >= (4, 0, 0):
         inputs = modifier.node_group.interface.items_tree
 
-    return inputs
+    return inputs.get(input_name)
 
-# geonodes funcs
-def set_geonode_value_proper(modifier, input_name, value):
-    for i in get_geonode_inputs_from_modifier(modifier):
-        if i.name == input_name:
-            input_type = type(i.default_value).__name__
-            value_type = type(value).__name__
+def get_geonode_value(modifier, input_name):
+    input = get_geonode_input_from_modifier(modifier, input_name)
+    return modifier[input.identifier]
 
-            if input_type == value_type:
-                modifier[i.identifier] = value
-            #     i.default_value = i.default_value     # crash in 4.4
+def set_geonode_value(modifier, input_name, value):
+    input = get_geonode_input_from_modifier(modifier, input_name)
+    input_type = type(input.default_value).__name__
+
+    if input_type == 'bool':
+        value = bool(value)
+    elif input_type == 'float':
+        value = float(value)
+    elif input_type == 'int':
+        value = int(value)
+
+    value_type = type(value).__name__
+
+    if input_type == value_type:
+        modifier[input.identifier] = value
+    else:
+        print(f'-ERR- setting {input.name} value')
 
 
-def get_geonode_value_proper(modifier, input_name):
-    for i in get_geonode_inputs_from_modifier(modifier):
-        if i.name == input_name:
-            return modifier[i.identifier]
 
-def reset_geonode_value(modifier, input_name):
-    for i in get_geonode_inputs_from_modifier(modifier):
-        if i.name == input_name:
-            modifier[i.identifier] = i.default_value
-            # i.default_value = i.default_value     # crash in 4.4
 
 def del_all_vertices_from_object(obj):
         if obj.mode == 'OBJECT':
@@ -164,18 +167,7 @@ def update_geonode_value_from_property(self, prop_name):
     modifier = get_sgf_modifier(obj)
     value = obj.sgf_settings[prop_name]
 
-    # convert property value to boolean if gn value is of boolean type
-    gn_value = get_geonode_value_proper(modifier, prop_name)
-    gn_value_type = type(gn_value).__name__
-
-    if gn_value_type == 'bool':
-        value = bool(value)
-    elif gn_value_type == 'float':
-        value = float(value)
-    elif gn_value_type == 'int':
-        value = int(value)
-
-    set_geonode_value_proper(modifier, prop_name, value)
+    set_geonode_value(modifier, prop_name, value)
 
 def display_ascii_board(layout, sgf_path, board_size):
     try:
@@ -319,8 +311,8 @@ def load_game_metadata(obj, sgf_path):
     modifier = get_sgf_modifier(obj)
     
 
-    set_geonode_value_proper(modifier, 'sgf_filepath', sgf_path)
-    set_geonode_value_proper(modifier, 'board_name', os.path.basename(sgf_path))
+    set_geonode_value(modifier, 'sgf_filepath', sgf_path)
+    set_geonode_value(modifier, 'board_name', os.path.basename(sgf_path))
 
     # set custom properties values
     obj.sgf_settings.sgf_filepath = sgf_path
@@ -421,7 +413,7 @@ def set_vertices_from_board_array(obj, board_array):
     verts_array = []
     color_array = []
 
-    board_size = get_geonode_value_proper(modifier, 'board_size')
+    board_size = get_geonode_value(modifier, 'board_size')
 
     for i, char in enumerate(board_array):
         if char in ['o', '#']:
@@ -507,7 +499,7 @@ def update_board_from_move(self, context):
 def get_svg_filepath_for_multiple_export():
 
     modifier = get_sgf_modifier(bpy.context.object)
-    board_name = get_geonode_value_proper(modifier, 'board_name')
+    board_name = get_geonode_value(modifier, 'board_name')
 
     if board_name == '':
         board_name = 'temp'
@@ -524,18 +516,18 @@ def get_svg_filepath_for_single_export_from_modifier(modifier, user_filepath=Non
     if user_filepath:
         basename = os.path.basename(user_filepath)
     else:
-        basename = get_geonode_value_proper(modifier, 'board_name')
+        basename = get_geonode_value(modifier, 'board_name')
 
     if os.path.splitext(basename)[1] in ['.svg', '.sgf']:
         basename = os.path.splitext(basename)[0]
 
     # add suffix for each visible element
-    edge = '-edge' if get_geonode_value_proper(modifier, 'show_edge') else ''
-    grid_x = '-gridX' if get_geonode_value_proper(modifier, 'show_grid_x') else ''
-    grid_y = '-gridY' if get_geonode_value_proper(modifier, 'show_grid_y') else ''
-    hoshis = '-hoshis' if get_geonode_value_proper(modifier, 'show_hoshis') else ''
-    black = '-black' if get_geonode_value_proper(modifier, 'show_black_stones') else ''
-    white = '-white' if get_geonode_value_proper(modifier, 'show_white_stones') else ''
+    edge = '-edge' if get_geonode_value(modifier, 'show_edge') else ''
+    grid_x = '-gridX' if get_geonode_value(modifier, 'show_grid_x') else ''
+    grid_y = '-gridY' if get_geonode_value(modifier, 'show_grid_y') else ''
+    hoshis = '-hoshis' if get_geonode_value(modifier, 'show_hoshis') else ''
+    black = '-black' if get_geonode_value(modifier, 'show_black_stones') else ''
+    white = '-white' if get_geonode_value(modifier, 'show_white_stones') else ''
 
     for element in [edge, grid_x, grid_y, hoshis, black, white]:
         basename += element
@@ -563,14 +555,14 @@ def export_to_svg_ops(obj, svg_filepath):
     scn = bpy.context.scene
     duplicate_modifier = get_sgf_modifier(bpy.context.object)
 
-    # set_geonode_value_proper(duplicate_modifier, 'show_edge', obj.sgf_settings.show_edge)
-    # set_geonode_value_proper(duplicate_modifier, 'show_grid_x', obj.sgf_settings.show_grid_x)
-    # set_geonode_value_proper(duplicate_modifier, 'show_grid_y', obj.sgf_settings.show_grid_y)
-    # set_geonode_value_proper(duplicate_modifier, 'show_hoshis', obj.sgf_settings.show_hoshis)
-    # set_geonode_value_proper(duplicate_modifier, 'show_black_stones', obj.sgf_settings.show_black_stones)
-    # set_geonode_value_proper(duplicate_modifier, 'show_white_stones', obj.sgf_settings.show_white_stones)
-    set_geonode_value_proper(duplicate_modifier, 'stone_display', 0)
-    set_geonode_value_proper(duplicate_modifier, 'show_bounds_cross', True)
+    # set_geonode_value(duplicate_modifier, 'show_edge', obj.sgf_settings.show_edge)
+    # set_geonode_value(duplicate_modifier, 'show_grid_x', obj.sgf_settings.show_grid_x)
+    # set_geonode_value(duplicate_modifier, 'show_grid_y', obj.sgf_settings.show_grid_y)
+    # set_geonode_value(duplicate_modifier, 'show_hoshis', obj.sgf_settings.show_hoshis)
+    # set_geonode_value(duplicate_modifier, 'show_black_stones', obj.sgf_settings.show_black_stones)
+    # set_geonode_value(duplicate_modifier, 'show_white_stones', obj.sgf_settings.show_white_stones)
+    set_geonode_value(duplicate_modifier, 'stone_display', 0)
+    set_geonode_value(duplicate_modifier, 'show_bounds_cross', True)
 
     # apply modifier
     bpy.ops.object.modifier_apply(modifier=duplicate_modifier.name)

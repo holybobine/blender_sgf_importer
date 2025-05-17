@@ -5,8 +5,8 @@ from . import funcs
 
 def draw_prop_geonode(context, gn_modifier, input_name, label_name='', enabled=True, label=True, icon='NONE', toggle=-1, invert_checkbox=False):
 
-    inputs = funcs.get_geonode_inputs_from_modifier(gn_modifier)
-    input_id = next(i.identifier for i in inputs if i.name == input_name)
+    input = funcs.get_geonode_input_from_modifier(gn_modifier, input_name)
+    input_id = input.identifier
 
     # print(input_id)
 
@@ -188,7 +188,7 @@ class SGF_PT_board_settings(bpy.types.Panel):
         draw_prop_geonode(row, modifier, 'show_board_name', label=False)
 
         rrow = row.row()
-        rrow.enabled = funcs.get_geonode_value_proper(modifier, 'show_board_name')
+        rrow.enabled = funcs.get_geonode_value(modifier, 'show_board_name')
         draw_prop_geonode(rrow, modifier, 'board_name', label=False) 
 
         col1.separator()

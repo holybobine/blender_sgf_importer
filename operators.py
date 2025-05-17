@@ -152,7 +152,7 @@ class SGF_OT_bouton(bpy.types.Operator):
         # obj = context.object
         # modifier = funcs.get_sgf_modifier(obj)
 
-        # funcs.set_geonode_value_proper(modifier, 'board_name', 'JOOOHN')
+        # funcs.set_geonode_value(modifier, 'board_name', 'JOOOHN')
 
         print()
 
@@ -283,14 +283,14 @@ class SGF_OT_export_to_svg_multiple(bpy.types.Operator, ExportHelper):
         modifier = funcs.get_sgf_modifier(obj)
 
         for layer in sgf_layers:
-            funcs.set_geonode_value_proper(
+            funcs.set_geonode_value(
                 modifier=modifier, 
                 input_name=layer[0], 
                 value=bool(layer[0] == target_layer[0])
             )
 
         # display outer edge by default
-        # funcs.set_geonode_value_proper(modifier, 'show_edge', True)
+        # funcs.set_geonode_value(modifier, 'show_edge', True)
 
     def execute(self, context):
         
@@ -329,7 +329,7 @@ class SGF_OT_export_to_svg_multiple(bpy.types.Operator, ExportHelper):
                 )
 
         for layer in sgf_layers:
-            funcs.set_geonode_value_proper(
+            funcs.set_geonode_value(
                 modifier=modifier, 
                 input_name=layer[0], 
                 value=bool(layer[1])
